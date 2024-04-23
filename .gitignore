@@ -1,0 +1,48 @@
+# Ignore the .env file, which contains sensitive information
+.env
+.env.backup
+.env.production
+
+# Ignore the storage directory (where logs, cache, and other generated files are stored)
+/storage
+/storage/*.key
+/public/build
+/public/hot
+/public/storage
+
+# Ignore the bootstrap directory (where compiled code is stored)
+/bootstrap
+
+# Ignore the vendor directory (where Composer dependencies are installed)
+/vendor
+
+# Ignore the node_modules directory (where npm or yarn dependencies are installed)
+/node_modules
+
+# Ignore database configuration files
+/config/database.php
+
+# Ignore IDE-specific files
+/.idea
+/.vscode
+
+# Ignore Composer's autoload file
+/vendor/autoload.php
+
+# Ignore Composer's generated files
+/composer.lock
+
+# Ignore npm's generated files
+/package-lock.json
+/yarn.lock
+
+# Ignore Homestead Vagrant file
+Homestead.json
+Homestead.yaml
+
+# Extras 
+.phpunit.result.cache
+auth.json
+npm-debug.log
+yarn-error.log
+/.fleet
