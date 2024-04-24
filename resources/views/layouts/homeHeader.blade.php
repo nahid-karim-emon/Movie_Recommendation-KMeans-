@@ -112,7 +112,7 @@
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.view') }}">Recommendation (Euclidean)</a></li>
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.viewm') }}">Recommendation (Manhantan)</a></li> --}}
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.view3') }}">Recommendation (K-Means Clustering)</a></li>
-                  {{-- <li><a class="dropdown-item" href="{{ route('user.recommendation.view4') }}">Recommendation (KMeans - M)</a></li> --}}
+                  <li><a class="dropdown-item" href="{{ route('user.recommendation.view4') }}">Recommendation (K-Nearest Neighbour)</a></li>
                   <li><a class="dropdown-item" href="{{ route('user.profile.view') }}">Profile</a></li>
                 </ul>
               </li>
