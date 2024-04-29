@@ -101,7 +101,7 @@
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                             Languages</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ App\Models\Language::count() }}</div>
                     </div>
@@ -119,7 +119,7 @@
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                             Production Companies</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ App\Models\ProductionCompany::count() }}</div>
                     </div>
@@ -137,7 +137,7 @@
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                             Directors</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ App\Models\Director::count() }}</div>
                     </div>

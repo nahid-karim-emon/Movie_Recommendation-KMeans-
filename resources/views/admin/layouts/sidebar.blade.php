@@ -43,10 +43,10 @@
             <span>User</span>
         </a>
         <div id="collapseOne" class="collapse @if(request()->is('admin/student*')) show @endif" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
+            <div class="bg-primary py-2 collapse-inner rounded">
                 <h6 class="collapse-header">User Management</h6>
-                <a class=" text-white collapse-item" href="{{ route('admin.user.index') }}">View All</a>
-                <a class="text-white collapse-item" href="{{ route('admin.user.create') }}">Add new </a>
+                <a class="  collapse-item" href="{{ route('admin.user.index') }}">View All</a>
+                <a class=" collapse-item" href="{{ route('admin.user.create') }}">Add new </a>
             </div>
         </div>
     </li>
@@ -61,7 +61,7 @@
         </a>
         <div id="collapseTwo" class="collapse @if(request()->is('admin/department*')) show @endif" aria-labelledby="headingUtilities"
             data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
+            <div class="bg-primary py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Department Management</h6>
                 <a class="collapse-item" href="{{ route('admin.department.index') }}">View All</a>
                 <a class="collapse-item" href="{{ route('admin.department.create') }}">Add new</a>
@@ -79,10 +79,10 @@
         </a>
         <div id="collapseThree" class="collapse @if(request()->is('admin/staff*')) show @endif" aria-labelledby="headingUtilities"
             data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
+            <div class="bg-primary py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Staff Management</h6>
-                <a class="collapse-item text-white" href="{{ route('admin.staff.index') }}">View All</a>
-                <a class="collapse-item text-white" href="{{ route('admin.staff.create') }}">Add new</a>
+                <a class="collapse-item " href="{{ route('admin.staff.index') }}">View All</a>
+                <a class="collapse-item " href="{{ route('admin.staff.create') }}">Add new</a>
             </div>
         </div>
     </li>
@@ -107,8 +107,8 @@
             data-parent="#accordionSidebar">
             <div class="bg-primary py-2 collapse-inner rounded">
                 <h6 class="collapse-header ">Actor/Actress Management</h6>
-                <a class="collapse-item text-white" href="{{ route('admin.cast.index') }}">View All</a>
-                <a class="collapse-item text-white" href="{{ route('admin.cast.create') }}">Add new</a>
+                <a class="collapse-item" href="{{ route('admin.cast.index') }}">View All</a>
+                <a class="collapse-item" href="{{ route('admin.cast.create') }}">Add new</a>
             </div>
         </div>
     </li>
@@ -128,8 +128,8 @@
             data-parent="#accordionSidebar">
             <div class="bg-primary py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Genres Management</h6>
-                <a class="collapse-item text-white" href="{{ route('admin.genre.index') }}">View All</a>
-                <a class="collapse-item text-white" href="{{ route('admin.genre.create') }}">Add new</a>
+                <a class="collapse-item" href="{{ route('admin.genre.index') }}">View All</a>
+                <a class="collapse-item" href="{{ route('admin.genre.create') }}">Add new</a>
             </div>
         </div>
     </li>
@@ -149,8 +149,8 @@
             data-parent="#accordionSidebar">
             <div class="bg-primary py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Languages Management</h6>
-                <a class="collapse-item text-white" href="{{ route('admin.language.index') }}">View All</a>
-                <a class="collapse-item text-white" href="{{ route('admin.language.create') }}">Add new</a>
+                <a class="collapse-item " href="{{ route('admin.language.index') }}">View All</a>
+                <a class="collapse-item " href="{{ route('admin.language.create') }}">Add new</a>
             </div>
         </div>
     </li>

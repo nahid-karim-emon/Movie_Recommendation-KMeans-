@@ -14,6 +14,12 @@
     <!-- Divider -->
     <hr class="sidebar-divider my-0">
 
+    <li class="nav-item active">
+        <a class="nav-link" href="{{route('root')}}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Home</span></a>
+    </li>
+
     <!-- Nav Item - Dashboard -->
     <li class="nav-item active">
         <a class="nav-link" href="{{ route('user.dashboard') }}">
@@ -25,10 +31,10 @@
     <hr class="sidebar-divider">
     <!-- Nav Item Support - Utilities Collapse Menu -->
     <!-- Heading -->
-    <div class="sidebar-heading">
+    {{-- <div class="sidebar-heading">
         Support System
-   </div>
-    <li class="nav-item">
+   </div> --}}
+    {{-- <li class="nav-item">
         <a class="nav-link @if (!request()->is('user/support*'))
             collapsed
         @endif" href="#" data-toggle="collapse" data-target="#collapseSeven"
@@ -44,7 +50,27 @@
                 <a class="collapse-item" href="{{ route('user.support.create') }}">Add New </a>
             </div>
         </div>
+    </li> --}}
+
+    <li class="nav-item active">
+        <a class="nav-link" href="{{ route('user.profile.view') }}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Profile</span></a>
     </li>
+
+    <li class="nav-item active">
+        <a class="nav-link" href="{{ route('user.profile.edit') }}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Edit Profile</span></a>
+    </li>
+
+    <li class="nav-item active">
+        <a class="nav-link" href="{{ route('user.interest.add') }}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>My Interests</span></a>
+    </li>
+
+
    
     <!--Logout - Dashboard -->
     <hr class="sidebar-divider d-none d-md-block">

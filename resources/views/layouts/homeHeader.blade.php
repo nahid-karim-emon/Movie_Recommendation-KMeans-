@@ -113,18 +113,20 @@
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.viewm') }}">Recommendation (Manhantan)</a></li> --}}
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.view3') }}">Recommendation (K-Means Clustering)</a></li>
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.view4') }}">Recommendation (K-Nearest Neighbour)</a></li>
-                  <li><a class="dropdown-item" href="{{ route('user.profile.view') }}">Profile</a></li>
                 </ul>
               </li>
+              {{-- <li><a class="dropdown-item" href="{{ route('user.profile.view') }}">Profile</a></li> --}}
+              <li class="nav-item ms-3"><a class="nav-link" href="{{ route('user.dashboard')}}">User Panel</a></li>
               @else
 		            <li class="nav-item"><a class="nav-link" data-bs-toggle="modal" data-bs-target="#signup-modal" href="#">Login</a></li>
 		            {{-- <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Login</a></li> --}}
                 @if (Route::has('register'))
 		            <li class="nav-item"><a class="nav-link" href="{{ route('register') }}">Register</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ route('admin.login') }}">Admin</a></li>
                 @endif
               @endauth
             @endif
-          <li class="nav-item"><a class="nav-link" href="{{ route('admin.login') }}">Admin</a></li>
+          {{-- <li class="nav-item"><a class="nav-link" href="{{ route('admin.login') }}">Admin</a></li> --}}
           @endauth
           <li class="nav-item"><a class="nav-link @if(request()->is('contact')) active @endif" href="{{ route('root.contact') }}">Contact</a></li>
           @auth
