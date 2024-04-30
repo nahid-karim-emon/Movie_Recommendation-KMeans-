@@ -223,6 +223,7 @@ class RecommendationController4 extends Controller
         return $resultArray;
     }
 
+
     public function index()
     {
         // Data preparation
@@ -235,7 +236,6 @@ class RecommendationController4 extends Controller
             $samples[] = [$row[1], $row[2]]; // Features: Language ID and Genre ID (adjust based on your data)
             $labels[] = $row[0]; // Label: Movie ID
         }
-
         // KNN classification
         $classifier = new KNearestNeighbors();
         $dataset = new ArrayDataset($samples, $labels);
@@ -261,12 +261,15 @@ class RecommendationController4 extends Controller
         */
 
         // Option 2: Recommend limited number of unique movies (uncomment this block)
-        $numRecommendations = 10; // Adjust this value for desired number
+        $numRecommendations = 20; // Adjust this value for desired number
         $count = 0;
         foreach ($predictions as $index => $predictedMovieId) {
-            if (!in_array($predictedMovieId, $recommendedMovies) && $count < $numRecommendations) {
+            if (!in_array($predictedMovieId, $recommendedMovies)) {
                 $recommendedMovies[] = $predictedMovieId;
                 $count++;
+            }
+            if ($count >= $numRecommendations) {
+                break; // Stop recommending once desired number is reached
             }
         }
 
