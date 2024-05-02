@@ -130,23 +130,9 @@ class UserController extends Controller
         if ($request->has('occupation')) {
             $formFields['occupation'] = $request->occupation;
         }
-        $data->name = $request->name;
-        $data->mobile = $request->mobile;
-        $data->address = $request->address;
-        $data->photo = $formFields['photo'];
-        $data->age = $request->age;
-        $data->gender = $request->gender;
-        $data->nationality = $request->nationality;
-        $data->educational_level = $request->educational_level;
-        $data->language = $request->language;
-        $data->religion = $request->religion;
-        $data->maritial_status = $request->maritial_status;
-        $data->occupation = $request->occupation;
-        $data->updated_at = now();
 
-        $data->save();
 
-        //$data->update($formFields);
+        $data->update($formFields);
         return redirect()->route('staff.user.index')->with('success', 'Data has been updated Successfully!');
     }
 
