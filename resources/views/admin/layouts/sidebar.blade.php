@@ -74,7 +74,7 @@
         </div>
     </li>
      <!-- Nav Item Department - Utilities Collapse Menu -->
-     <li class="nav-item">
+     {{-- <li class="nav-item">
         <a class="text-white nav-link @if (!request()->is('admin/department*'))
             collapsed
         @endif" href="#" data-toggle="collapse" data-target="#collapseTwo"
@@ -108,7 +108,7 @@
                 <a class="collapse-item " href="{{ route('admin.staff.create') }}">Add new</a>
             </div>
         </div>
-    </li>
+    </li> --}}
      <!-- Divider -->
      <hr class="sidebar-divider">
      <!-- Divider -->
@@ -240,11 +240,11 @@
             </div>
         </div>
     </li>
-    
+{{--     
        <!-- Divider -->
-       <hr class="sidebar-divider">
+       <hr class="sidebar-divider"> --}}
        <!-- Heading -->
-       <div class="sidebar-heading">
+       {{-- <div class="sidebar-heading">
         Email System
        </div>
        <!-- Nav Email Services - Utilities Collapse Menu -->
@@ -264,7 +264,7 @@
                    <a class="collapse-item" href="{{ route('admin.email.create') }}">Add new</a>
                </div>
            </div>
-       </li>
+       </li> --}}
    
        <!-- Divider -->
        <hr class="sidebar-divider">

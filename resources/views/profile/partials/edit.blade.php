@@ -29,6 +29,40 @@
                     <th>Address</th>
                     <td><textarea name="address" class="form-control">{{ $user->address }}</textarea></td>
                 </tr>
+                {{-- //add age,gender,nationality,educational level,language,religion,maritial status,occupation --}}
+                <tr>
+                    <th>Age</th>
+                    <td><input name="age" type="text" class="form-control" value="{{ $user->age }}"></td>
+                </tr>
+                <tr>
+                    <th>Gender</th>
+                    <td><input name="gender" type="text" class="form-control" value="{{ $user->gender }}"></td>
+                </tr>
+                <tr>
+                    <th>Nationality</th>
+                    <td><input name="nationality" type="text" class="form-control" value="{{ $user->nationality }}"></td>
+                </tr>
+                <tr>
+                    <th>Educational Level</th>
+                    <td><input name="educational_level" type="text" class="form-control" value="{{ $user->educational_level }}"></td>
+                </tr>
+                <tr>
+                    <th>Language</th>
+                    <td><input name="language" type="text" class="form-control" value="{{ $user->language }}"></td>
+                </tr>
+                <tr>
+                    <th>Religion</th>
+                    <td><input name="religion" type="text" class="form-control" value="{{ $user->religion }}"></td>
+                </tr>
+                <tr>
+                    <th>Maritial Status</th>
+                    <td><input name="maritial_status" type="text" class="form-control" value="{{ $user->maritial_status }}"></td>
+                </tr>
+                <tr>
+                    <th>Occupation</th>
+                    <td><input name="occupation" type="text" class="form-control" value="{{ $user->occupation }}"></td>
+                </tr>
+                
                 <tr>
                     <td colspan="2">
                         <button type="submit" class="btn btn-primary">Update</button>

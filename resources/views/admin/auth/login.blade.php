@@ -24,45 +24,53 @@
 
 <body>
 
-    <section class="pt-5 pb-5 mt-0 align-items-center d-flex" style="min-height: 100vh; background-size: cover;  background-color: #D0A2F7;">
-        <div class="container-fluid">
-            
-          <div class="row  justify-content-center align-items-center d-flex-row text-center h-100">
-            <div class="col-12 col-md-4 col-lg-4 h-50 ">
-              <div class="card shadow">
-                <div class="card-body mx-2">
-                @error('email')
-                  <div class="text-bold bg-danger text-center text-white p-2">{{ $message }}</div>
-                  @enderror
-                  @error('password')
-                  <div class="text-bold bg-danger text-center text-white p-2">{{ $message }}</div>
-                  @enderror
-                  <img src="{{asset('img/just.png')}}" class="rounded mx-auto d-block" alt="Logo" style="height: 150px;">
-                  <h4 class="card-title mt-1 text-center">Admin Login</h4>
-                  <form method="POST" action="{{ route('admin.adminlogin') }}">
-                    @csrf
-                    <div class="form-group input-group">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text"> <i class="fa fa-envelope"></i> </span>
-                      </div> 
-                      <input required name="email" class="form-control" placeholder="Enter Email address" type="email" value="{{ old('email') }}">
+  <section class="pt-5 pb-5 mt-0 align-items-center d-flex" style="min-height: 100vh; background-size: cover; background-color: #D0A2F7;">
+    <div class="container">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-body">
+                        @error('email')
+                        <div class="alert alert-danger text-center">{{ $message }}</div>
+                        @enderror
+                        @error('password')
+                        <div class="alert alert-danger text-center">{{ $message }}</div>
+                        @enderror
+                        <div class="text-center mb-4">
+                            <img src="{{ asset('img/just.png') }}" class="img-fluid" alt="Logo" style="max-height: 150px;">
+                            <h4 class="card-title mt-3">Admin Login</h4>
+                        </div>
+                        <form method="POST" action="{{ route('admin.adminlogin') }}">
+                            @csrf
+                            <div class="form-group">
+                                <label for="email" class="sr-only">Email Address</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"> <i class="fa fa-envelope"></i> </span>
+                                    </div>
+                                    <input required name="email" id="email" class="form-control" placeholder="Enter Email address" type="email" value="{{ old('email') }}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="password" class="sr-only">Password</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"> <i class="fa fa-lock"></i> </span>
+                                    </div>
+                                    <input required name="password" id="password" class="form-control" placeholder="Enter password" type="password" value="{{ old('password') }}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary btn-block">Login</button>
+                            </div>
+                        </form>
                     </div>
-                    <div class="form-group input-group">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text"> <i class="fa fa-lock"></i> </span>
-                      </div>
-                      <input required name="password" class="form-control" placeholder="Enter password" type="password" value="{{ old('password') }}">
-                    </div>
-                    <div class="form-group">
-                      <button type="submit" class="btn btn-primary btn-block"> Login </button>
-                    </div>
-                  </form>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
-     </section>
+    </div>
+</section>
+
     <!-- Bootstrap core JavaScript-->
     <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>

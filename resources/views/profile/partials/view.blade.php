@@ -79,6 +79,93 @@
               </div>
               <hr>
               <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Age</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted
+                  mb-0">{{ $user->age }}</p>
+                </div>
+              </div>
+              {{-- add age,gender,nationality,educational level,language,religion,maritial status,occupation --}}
+              <hr>
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Gender</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted
+                  mb-0">{{ $user->gender }}</p>
+                </div>
+              </div>
+
+              <hr>
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Nationality</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted
+                  mb-0">{{ $user->nationality }}</p>
+                </div>
+              </div>
+
+              <hr>
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Educational Level</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted
+                  mb-0">{{ $user->educational_level }}</p>
+                </div>
+              </div>
+
+              <hr>
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Language</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted
+                  mb-0">{{ $user->language }}</p>
+                </div>
+              </div>
+
+              <hr>
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Religion</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted
+                  mb-0">{{ $user->religion }}</p>
+                </div>
+              </div>
+
+              <hr>
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Maritial Status</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted
+                  mb-0">{{ $user->maritial_status }}</p>
+                </div>
+              </div>
+
+              <hr>
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Occupation</p>
+                </div>
+                <div class="col-sm-9">
+                  <p class="text-muted
+                  mb-0">{{ $user->occupation }}</p>
+                </div>
+              </div>
+              <hr>
+              <div class="row">
                 <div class="col-sm-3 float-left">
                   <a href="{{ route('user.profile.edit') }}"><button type="button" class="btn btn-primary">Edit Profile</button></a>
                 </div>

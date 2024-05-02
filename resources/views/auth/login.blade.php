@@ -26,68 +26,62 @@
 
 <body>
 
-    <section class="pt-5 pb-5 mt-0 align-items-center d-flex bg-dark" style="min-height: 100vh; background-size: cover; background-image: url('{{ asset($SiteOption[3]->value) }}')">
-        <div class="container-fluid">
-            
-          <div class="row  justify-content-center align-items-center d-flex-row text-center h-100">
-            <div class="col-12 col-md-4 col-lg-4 h-50 ">
-              <div class="card shadow">
-                <div class="card-body mx-2">
-                    @error('email')
-                  <div class="text-bold bg-danger text-center text-white p-2">{{ $message }}</div>
-                  @enderror
-                  @error('password')
-                  <div class="text-bold bg-danger text-center text-white p-2">{{ $message }}</div>
-                  @enderror
-                  <h4 class="card-title mt-3 text-center">Login</h4>
-                  {{-- <p class="text-center">Get started with your free account</p>
-                  <p>
-                    <a href="" class="btn btn-block btn-info">
-                      <i class="fab fa-twitter mr-2"></i>Login via Twitter</a>
-                    <a href="" class="btn btn-block btn-primary">
-                      <i class="fab fa-facebook-f mr-2"></i>Login via facebook</a>
-                  </p>
-                  <p class="text-muted font-weight-bold ">
-                    <span>OR</span>
-                  </p> --}}
-                  <form method="POST" action="{{ route('login') }}">
-                    @csrf
-                    <div class="form-group input-group">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text"> <i class="fa fa-envelope"></i> </span>
-                      </div> 
-                      <input required name="email" class="form-control" placeholder="Enter Email address" type="email" value="{{ old('email') }}">
+  <section class="pt-5 pb-5 mt-0 align-items-center d-flex bg-dark" style="min-height: 100vh; background-size: cover; background-image: url('{{ asset($SiteOption[3]->value) }}')">
+    <div class="container">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-body">
+                        @error('email')
+                        <div class="alert alert-danger text-center">{{ $message }}</div>
+                        @enderror
+                        @error('password')
+                        <div class="alert alert-danger text-center">{{ $message }}</div>
+                        @enderror
+                        <h4 class="card-title mt-3 text-center">Login</h4>
+                        <form method="POST" action="{{ route('login') }}">
+                            @csrf
+                            <div class="form-group">
+                                <label for="email" class="sr-only">Email Address</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"> <i class="fa fa-envelope"></i> </span>
+                                    </div>
+                                    <input required name="email" id="email" class="form-control" placeholder="Enter Email address" type="email" value="{{ old('email') }}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="password" class="sr-only">Password</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"> <i class="fa fa-lock"></i> </span>
+                                    </div>
+                                    <input required name="password" id="password" class="form-control" placeholder="Enter password" type="password" value="{{ old('password') }}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="w-100 btn btn-primary btn-block"> Login </button>
+                            </div>
+                        </form>
+                        <hr>
+                        @if (Route::has('password.request'))
+                        <p class="text-center">Forgot Your Password?
+                            <a href="{{ route('password.request') }}">Request New Password</a>
+                        </p>
+                        @endif
+                        @if (Route::has('register'))
+                        <p class="text-center">Don't Have an account?
+                            <a href="{{ route('register') }}" class="btn btn-info">
+                                <i class="fa fa-signup mr-2"></i>Create an Account</a>
+                        </p>
+                        @endif
                     </div>
-                    <div class="form-group input-group">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text"> <i class="fa fa-lock"></i> </span>
-                      </div>
-                      <input required name="password" class="form-control" placeholder="Enter password" type="password" value="{{ old('password') }}">
-                    </div>
-                    <div class="form-group ">
-                      <button type="submit" class="w-100 btn btn-primary btn-block"> Login </button>
-                    </div>
-                    <hr>
-                    @if (Route::has('password.request'))
-                    <p class="text-center">Forgot Your Password?
-                      <a href="{{ route('password.request') }}">Request New Password</a>
-                    </p>
-                    @endif
-                    <hr>
-                    @if (Route::has('register'))
-                    <p class="text-center">Don't Have an account?
-                        <a href="{{ route('register') }}" class="btn btn-block btn-info">
-                            <i class="fa fa-signup m-2"></i>Create an Account</a>
-                    </p>
-                    @endif
-                    
-                  </form>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
-     </section>
+    </div>
+</section>
+
     <!-- Bootstrap core JavaScript-->
     <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>

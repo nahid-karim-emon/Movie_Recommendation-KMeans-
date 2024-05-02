@@ -17,21 +17,54 @@
             <div class="table-responsive">
                 <table class="table table-bordered" width="100%">
                         <tr>
-                            <th>Photo</th>
-                            <td><img width="100" src="{{$data->photo ? asset('storage/'.$data->photo) : url('images/user.png')}}" alt="User Photo"></td>
-                        </tr>
-                       <th>Full Name </th>
+                            <th>Full Name </th>
                             <td>{{ $data->name }}</td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
+                            <th>Age</th>
+                            <td>{{ $data->age }}</td>
+                        </tr>
+                        <tr>
+                            <th>Gender</th>
+                            <td>{{ $data->gender }}</td>
+                        </tr>
+                        <tr>
+                            <th>Nationality</th>
+                            <td>{{ $data->nationality }}</td>
+                        </tr>
+                        <tr>
+                            <th>Educational Level</th>
+                            <td>{{ $data->educational_level }}</td>
+                        </tr>
+                        <tr>
+                            <th>Language</th>
+                            <td>{{ $data->language }}</td>
+                        </tr>
+                        <tr>
+                            <th>Religion</th>
+                            <td>{{ $data->religion }}</td>
+                        </tr>
+                        <tr>
+                            <th>Maritial Status</th>
+                            <td>{{ $data->maritial_status }}</td>
+                        </tr>
+                        <tr>
+                            <th>Occupation</th>
+                            <td>{{ $data->occupation }}</td>
+                        </tr>
+                        <tr>
                             <th>Email</th>
                             <td>{{ $data->email }}</td>
                         </tr><tr>
                             <th>Mobile No </th>
                             <td>{{ $data->mobile }}</td>
-                        </tr><tr>
+                        </tr>
+                        <tr>
                             <th>Address</th>
                             <td>{{ $data->address }}</td>
-                        </tr><tr>
+                        </tr>
+                        
+                        <tr>
                             <td colspan="2">
                                 <a href="{{ route('admin.user.edit',$data->id) }}" class="float-right btn btn-info btn-sm"><i class="fa fa-edit"> Edit User: {{ $data->name }}  </i></a>
                             </td>

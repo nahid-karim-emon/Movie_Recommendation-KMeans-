@@ -27,47 +27,45 @@
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
+                    <thead class="thead-dark">
                         <tr>
                             <th>#</th>
-                            <th>Photo</th>
                             <th>Name</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Nationality</th>
+                            <th>Educational Level</th>
+                            <th>Language</th>
+                            <th>Religion</th>
+                            <th>Marital Status</th>
+                            <th>Occupation</th>
                             <th>Email</th>
                             <th>Mobile</th>
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tfoot>
-                        <tr>
-                            <th>#</th>
-                            <th>Photo</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Mobile</th>
-                            <th>Action</th>
-                        </tr>
-                    </tfoot>
                     <tbody>
                         @if($data)
                         @foreach ($data as $key=> $d)
                         <tr>
                             <td>{{ ++$key }}</td>
-                            <td><img width="100"
-                                class=""
-                                src="{{$d->photo ? asset('storage/'.$d->photo) : asset('images/user.png')}}"
-                                alt="{{ $d->name }}'s Photo"
-                            /></td>
                             <td>{{ $d->name }}</td>
+                            <td>{{ $d->age }}</td>
+                            <td>{{ $d->gender }}</td>
+                            <td>{{ $d->nationality }}</td>
+                            <td>{{ $d->educational_level }}</td>
+                            <td>{{ $d->language }}</td>
+                            <td>{{ $d->religion }}</td>
+                            <td>{{ $d->maritial_status }}</td>
+                            <td>{{ $d->occupation }}</td>
                             <td>{{ $d->email }}</td>
                             <td>{{ $d->mobile }}</td>
-                            
                             
                             <td class="text-center">
                                 <a href="{{ route('admin.user.show',$d->id) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
                                 <a href="{{ route('admin.user.edit',$d->id) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
                                 <a onclick="return confirm('Are You Sure?')" href="{{ url('admin/user/'.$d->id.'/delete') }}" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></a>
                             </td>
-
                         </tr>
                         @endforeach
                         @endif
@@ -75,6 +73,7 @@
                 </table>
             </div>
         </div>
+        
     </div>
 
     @section('scripts')

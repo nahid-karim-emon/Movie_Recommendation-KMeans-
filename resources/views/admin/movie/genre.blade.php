@@ -45,7 +45,7 @@
                             <th>Name</th>
                             <th>Genre</th>
                             <th>Language</th>
-                            <th>Actor</th>
+                            <th>Casts</th>
                             <th>Directors</th>
                             <th>Production Company</th>
                             <th>Country</th>

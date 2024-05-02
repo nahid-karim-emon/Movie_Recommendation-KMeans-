@@ -70,11 +70,44 @@ class ProfileController extends Controller
         } else {
             $formFields['photo'] = $request->prev_photo;
         }
+        if ($request->has('age')) {
+            $formFields['age'] = $request->age;
+        }
+        if ($request->has('gender')) {
+            $formFields['gender'] = $request->gender;
+        }
+        if ($request->has('nationality')) {
+            $formFields['nationality'] = $request->nationality;
+        }
+        if ($request->has('educational_level')) {
+            $formFields['educational_level'] = $request->educational_level;
+        }
+        if ($request->has('language')) {
+            $formFields['language'] = $request->language;
+        }
+        if ($request->has('religion')) {
+            $formFields['religion'] = $request->religion;
+        }
+        if ($request->has('maritial_status')) {
+            $formFields['maritial_status'] = $request->maritial_status;
+        }
+        if ($request->has('occupation')) {
+            $formFields['occupation'] = $request->occupation;
+        }
 
         $data->name = $request->name;
         $data->mobile = $request->mobile;
         $data->address = $request->address;
         $data->photo = $formFields['photo'];
+        $data->age = $request->age;
+        $data->gender = $request->gender;
+        $data->nationality = $request->nationality;
+        $data->educational_level = $request->educational_level;
+        $data->language = $request->language;
+        $data->religion = $request->religion;
+        $data->maritial_status = $request->maritial_status;
+        $data->occupation = $request->occupation;
+        $data->updated_at = now();
 
         $data->save();
 
