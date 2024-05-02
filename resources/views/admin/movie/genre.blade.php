@@ -18,25 +18,28 @@
     <!-- DataTales Example -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h3 class="m-0 font-weight-bold text-primary">Movies of Genre : {{ $genre->title }} 
-            <a href="{{ route('admin.movie.create') }}" class="float-right btn btn-success btn-sm p-2" target="_self">Add New</a> 
-            <div class=" float-right  d-inline mx-1">
-                <form action="{{ route('admin.movie.genre')}}" method="post">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="m-0 font-weight-bold text-primary">Movies of Genre: {{ $genre->title }}</h3>
+                <a href="{{ route('admin.movie.create') }}" class="btn btn-success btn-sm" target="_self">Add New</a>
+            </div>
+            <div class="d-flex align-items-center mt-3">
+                <form action="{{ route('admin.movie.genre')}}" method="post" class="d-flex">
                     @csrf 
-                <select name="id" class="form-control">
-                    @foreach ($genres as $g)
-                    <option @if ($g->id==$genre->id) selected @endif value="{{$g->id}}">{{$g->title}}</option>
-                    @endforeach
-                </select>
-                <button type="submit">Search</button>
+                    <select name="id" class="form-control mr-2">
+                        @foreach ($genres as $g)
+                        <option @if ($g->id==$genre->id) selected @endif value="{{$g->id}}">{{$g->title}}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="btn btn-primary">Search</button>
                 </form>
             </div>
-        </h3>
         </div>
+        
+    
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
+                    <thead class="thead-dark">
                         <tr>
                             <th>#</th>
                             <th>Name</th>
@@ -51,58 +54,41 @@
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tfoot>
-                        <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>Genre</th>
-                            <th>Language</th>
-                            <th>Actor</th>
-                            <th>Directors</th>
-                            <th>Production Company</th>
-                            <th>Country</th>
-                            <th>Release Date</th>
-                            <th>Movie Rating</th>
-                            <th>Action</th>
-                        </tr>
-                    </tfoot>
                     <tbody>
                         @php $i=0; @endphp
-
                         @if($data)
                         @foreach ($data as $key => $d)
-
                         <tr>
                             <td>{{ ++$i }}</td>
                             <td>{{ $d->movie->title }}</td>
                             <td>
                                 @foreach ($d->movie->MovieGenre as $MovieGenre)
-                                <span class="m-1 p-1 bg-secondary text-white"> {{ $MovieGenre->genre->title }} </span>
+                                <span class="badge badge-secondary">{{ $MovieGenre->genre->title }}</span>
                                 @endforeach
                             </td>
                             <td>
                                 @foreach ($d->movie->MovieLanguage as $MovieLanguage)
-                                <span class="m-1 p-1 bg-secondary text-white"> {{ $MovieLanguage->language->title }} </span>
+                                <span class="badge badge-secondary">{{ $MovieLanguage->language->title }}</span>
                                 @endforeach
                             </td>
                             <td>
                                 @foreach ($d->movie->MovieCast as $MovieCast)
-                                <span class="m-1 p-1 bg-secondary text-white"> {{ $MovieCast->cast->name }} </span>
+                                <span class="badge badge-secondary">{{ $MovieCast->cast->name }}</span>
                                 @endforeach
                             </td>
                             <td>
                                 @foreach ($d->movie->MovieDirector as $MovieDirector)
-                                <span class="m-1 p-1 bg-secondary text-white"> {{ $MovieDirector->director->name }} </span>
+                                <span class="badge badge-secondary">{{ $MovieDirector->director->name }}</span>
                                 @endforeach
                             </td>
                             <td>
                                 @foreach ($d->movie->MoviePcompany as $MoviePcompany)
-                                <span class="m-1 p-1 bg-secondary text-white"> {{ $MoviePcompany->pcompany->title }} </span>
+                                <span class="badge badge-secondary">{{ $MoviePcompany->pcompany->title }}</span>
                                 @endforeach
                             </td>
                             <td>
                                 @foreach ($d->movie->MovieCountry as $MovieCountry)
-                                <span class="m-1 p-1 bg-secondary text-white"> {{ $MovieCountry->country->title }} </span>
+                                <span class="badge badge-secondary">{{ $MovieCountry->country->title }}</span>
                                 @endforeach
                             </td>
                             @php
@@ -114,18 +100,19 @@
                                 @foreach ($d->movie->MovieRating as $MovieRating)
                                 @switch($MovieRating->rating_id)
                                 @case(1)
-                                    <div class="m-1 p-1 text-black "> IMDB RATING : {{ $MovieRating->ratings }} / 10 </div>
+                                    <span class="badge badge-info">IMDB: {{ $MovieRating->ratings }}/10</span>
                                     @break
                                 @case(2)
-                                    <div class="m-1 p-1 text-black "> Rotten Tomatoes : {{ $MovieRating->ratings }} / 100 </div>
+                                    <span class="badge badge-danger">Rotten Tomatoes: {{ $MovieRating->ratings }}/100</span>
                                     @break
                                 @case(3)
-                                    <div class="m-1 p-1 text-black "> Extra : {{ $MovieRating->ratings }} / 5 </div>
+                                    <span class="badge badge-warning">Extra: {{ $MovieRating->ratings }}/5</span>
                                     @break
                                 @default
-                                    <div class="m-1 p-1 text-black "> {{ $MovieRating->ratings }} </div>
+                                    <span class="badge badge-secondary">{{ $MovieRating->ratings }}</span>
                                 @endswitch
                                 @endforeach
+                            </td>
                             <td class="text-center">
                                 <a href="{{ route('admin.movie.show',$d->id) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
                                 <a href="{{ route('admin.movie.edit',$d->id) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
@@ -138,6 +125,7 @@
                 </table>
             </div>
         </div>
+        
     </div>
 
     @section('scripts')

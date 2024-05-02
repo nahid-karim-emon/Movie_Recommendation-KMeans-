@@ -29,6 +29,29 @@
             <span>Dashboard</span></a>
     </li>
 
+    <hr class="sidebar-divider">
+    <!-- Nav Movie Services - Utilities Collapse Menu -->
+    <div class="sidebar-heading">
+        Movie Management
+    </div>
+    <li class="nav-item">
+        <a class="nav-link text-white @if (!request()->is('admin/movie*'))
+            collapsed
+        @endif" href="#" data-toggle="collapse" data-target="#collapseTwelve"
+            aria-expanded="true" aria-controls="collapseTwelve">
+            <i class="fas fa-film"></i>
+            <span>Movies</span>
+        </a>
+        <div id="collapseTwelve" class="collapse @if(request()->is('admin/movie*')) show @endif" aria-labelledby="headingUtilities"
+            data-parent="#accordionSidebar">
+            <div class="bg-primary py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Movie Management</h6>
+                <a class="collapse-item" href="{{ route('admin.movie.index') }}">View All</a>
+                <a class="collapse-item" href="{{ route('admin.movie.create') }}">Add new</a>
+            </div>
+        </div>
+    </li>
+
     <!-- Divider -->
     <hr class="sidebar-divider">
     <!-- Heading -->
@@ -217,28 +240,7 @@
             </div>
         </div>
     </li>
-    <hr class="sidebar-divider">
-    <!-- Nav Movie Services - Utilities Collapse Menu -->
-    <div class="sidebar-heading">
-        Movie Management
-    </div>
-    <li class="nav-item">
-        <a class="nav-link text-white @if (!request()->is('admin/movie*'))
-            collapsed
-        @endif" href="#" data-toggle="collapse" data-target="#collapseTwelve"
-            aria-expanded="true" aria-controls="collapseTwelve">
-            <i class="fas fa-film"></i>
-            <span>Movies</span>
-        </a>
-        <div id="collapseTwelve" class="collapse @if(request()->is('admin/movie*')) show @endif" aria-labelledby="headingUtilities"
-            data-parent="#accordionSidebar">
-            <div class="bg-primary py-2 collapse-inner rounded">
-                <h6 class="collapse-header">Movie Management</h6>
-                <a class="collapse-item" href="{{ route('admin.movie.index') }}">View All</a>
-                <a class="collapse-item" href="{{ route('admin.movie.create') }}">Add new</a>
-            </div>
-        </div>
-    </li>
+    
        <!-- Divider -->
        <hr class="sidebar-divider">
        <!-- Heading -->
