@@ -12,4 +12,8 @@ class MovieLanguage extends Model
     {
         return $this->belongsTo(Language::class, 'language_id');
     }
+    function movie()
+    {
+        return $this->belongsTo(Movie::class, 'movie_id');
+    }
 }

@@ -80,6 +80,7 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
     Route::resource('country', CountryController::class);
     // Movie Crud
     Route::get('movie/{id}/delete', [MovieController::class, 'destroy']);
+    Route::post('movieGenre', [MovieController::class, 'indexGenre'])->name('movie.genre');
     Route::resource('movie', MovieController::class);
     //Movie Rating Update
     Route::get('movie/{id}/rating', [MovieController::class, 'rating'])->name('movie.rating');

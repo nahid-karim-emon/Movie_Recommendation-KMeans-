@@ -30,9 +30,17 @@ class MovieController extends Controller
     {
         //
         $data = Movie::all();
-        return view('admin.movie.index', ['data' => $data]);
+        $genres = Genre::all();
+        return view('admin.movie.index', ['data' => $data, 'genres' => $genres]);
     }
-
+    public function indexGenre(Request $request)
+    {
+        //
+        $data = MovieGenre::all()->where('genre_id', $request->id);
+        $genre = Genre::find($request->id);
+        $genres = Genre::all();
+        return view('admin.movie.genre', ['data' => $data, 'genre' => $genre, 'genres' => $genres]);
+    }
     /**
      * Show the form for creating a new resource.
      */

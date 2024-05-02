@@ -12,4 +12,8 @@ class MovieGenre extends Model
     {
         return $this->belongsTo(Genre::class, 'genre_id');
     }
+    function movie()
+    {
+        return $this->belongsTo(Movie::class, 'movie_id');
+    }
 }
