@@ -81,6 +81,8 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
     // Movie Crud
     Route::get('movie/{id}/delete', [MovieController::class, 'destroy']);
     Route::post('movieGenre', [MovieController::class, 'indexGenre'])->name('movie.genre');
+    Route::post('movieLanguage', [MovieController::class, 'indexLanguage'])->name('movie.language');
+    Route::post('movieCountry', [MovieController::class, 'indexCountry'])->name('movie.country');
     Route::resource('movie', MovieController::class);
     //Movie Rating Update
     Route::get('movie/{id}/rating', [MovieController::class, 'rating'])->name('movie.rating');

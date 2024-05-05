@@ -12,4 +12,8 @@ class MovieCountry extends Model
     {
         return $this->belongsTo(Country::class, 'country_id');
     }
+    function movie()
+    {
+        return $this->belongsTo(Movie::class, 'movie_id');
+    }
 }
