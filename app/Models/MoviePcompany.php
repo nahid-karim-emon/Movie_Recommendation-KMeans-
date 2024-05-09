@@ -12,4 +12,8 @@ class MoviePcompany extends Model
     {
         return $this->belongsTo(ProductionCompany::class, 'pcompany_id');
     }
+    function movie()
+    {
+        return $this->belongsTo(Movie::class, 'movie_id');
+    }
 }

@@ -33,7 +33,8 @@ class MovieController extends Controller
         $genres = Genre::all();
         $languages = Language::all();
         $countries = Country::all();
-        return view('admin.movie.index', ['data' => $data, 'genres' => $genres, 'languages' => $languages, 'countries' => $countries]);
+        $pcompanys = ProductionCompany::all();
+        return view('admin.movie.index', ['data' => $data, 'genres' => $genres, 'languages' => $languages, 'countries' => $countries, 'pcompanys' => $pcompanys]);
     }
     public function indexGenre(Request $request)
     {
@@ -58,6 +59,14 @@ class MovieController extends Controller
         $country = Country::find($request->id);
         $countries = Country::all();
         return view('admin.movie.country', ['data' => $data, 'country' => $country, 'countries' => $countries]);
+    }
+
+    public function indexPCompany(Request $request)
+    {
+        $data = MoviePcompany::all()->where('pcompany_id', $request->id);
+        $pcompany = ProductionCompany::find($request->id);
+        $pcompanys = ProductionCompany::all();
+        return view('admin.movie.pcompany', ['data' => $data, 'pcompany' => $pcompany, 'pcompanys' => $pcompanys]);
     }
     /**
      * Show the form for creating a new resource.

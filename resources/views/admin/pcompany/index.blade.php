@@ -66,7 +66,7 @@
                             @endphp
                             <td>{{ $formattedDate }}</td>
                             <td>{{ $d->founders }}</td>
-                            <td>{{ $d->genre->title }}</td>
+                            <td>{{ $d->title }}</td>
                             
                             <td class="text-center">
                                 <a href="{{ route('admin.pcompany.show',$d->id) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>

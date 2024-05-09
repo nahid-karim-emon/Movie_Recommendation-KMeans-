@@ -76,10 +76,11 @@
                     @csrf 
                     <div class="form-group mr-2">
                         <select id="searchType" class="form-control">
-                            <option value="shortby" selected>Sort By</option>
+                            <option value="sortby" selected>Sort By</option>
                             <option value="genre">Genre</option>
                             <option value="language">Language</option>
                             <option value="country">Country</option>
+                            <option value="pcompany">Production Company</option>
                         </select>                        
                     </div>
                     <div class="form-group mr-2">
@@ -117,6 +118,12 @@
                             @endforeach
                             document.getElementById('searchForm').action = "{{ route('admin.movie.country')}}";
                             break;
+                        case 'pcompany':
+                            @foreach ($pcompanys as $g)
+                            options.innerHTML += '<option value="{{$g->id}}">{{$g->title}}</option>';
+                            @endforeach
+                            document.getElementById('searchForm').action = "{{ route('admin.movie.pcompany')}}";
+                            break;    
                         default:
                             break;
                     }
