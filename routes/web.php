@@ -60,6 +60,7 @@ Route::middleware('auth')->prefix('user')->name('user.')->group(function () {
     Route::get('recommendationKE2/', [RecommendationController3::class, 'index4'])->name('recommendation.view5');
     Route::get('recommendationKM/', [RecommendationController4::class, 'index'])->name('recommendation.view4');
     Route::get('recommendationKM2/', [RecommendationController4::class, 'index2'])->name('recommendation.view6');
+    Route::get('recommendationDem/', [RecommendationController4::class, 'index3'])->name('recommendation.view7');
 });
 
 require __DIR__ . '/auth.php';

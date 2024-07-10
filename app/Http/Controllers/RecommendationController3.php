@@ -337,6 +337,19 @@ class RecommendationController3 extends Controller
 
     public function index()
     {
+
+        $user = Auth::user();
+        $data = Interest::all()->where('user_id', '=', $user->id)->first();
+        if ($data == null) {
+            //IF no interest Added
+            $genres = Genre::all();
+            $casts = Cast::all();
+            $languages = Language::all();
+            $pcompanys = ProductionCompany::all();
+            $directors = Director::all();
+            $countries = Country::all();
+            return view('profile.interest.interest', ['genres' => $genres, 'casts' => $casts, 'languages' => $languages, 'pcompanys' => $pcompanys, 'directors' => $directors, 'countries' => $countries, 'user' => $user]);
+        }
         // Data preparation
         $data = $this->data2DArrayAll();
 

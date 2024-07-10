@@ -111,6 +111,7 @@
                   {{-- <li><a class="dropdown-item" href="{{ route('user.dashboard') }}">Dashboard</a></li>
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.view') }}">Recommendation (Euclidean)</a></li>
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.viewm') }}">Recommendation (Manhantan)</a></li> --}}
+                  <li><a class="dropdown-item" href="{{ route('user.recommendation.view7') }}">Recommendation (Based On Demographic Information)</a></li>
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.view3') }}">Recommendation (K-Means Clustering)</a></li>
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.view4') }}">Recommendation (K-Nearest Neighbour)</a></li>
                 </ul>

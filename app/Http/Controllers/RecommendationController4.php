@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cast;
+use App\Models\Cluster;
 use App\Models\User;
 use App\Models\Genre;
 use App\Models\Movie;
@@ -26,6 +27,7 @@ use App\Models\InterestPcompany;
 use App\Models\MovieCountry;
 use App\Models\MoviePcompany;
 use App\Models\ProductionCompany;
+use App\Models\WatchMovie;
 use Illuminate\Support\Facades\Auth;
 use Phpml\Clustering\KMeans2;
 use Phpml\Classification\KNearestNeighbors;
@@ -376,6 +378,18 @@ class RecommendationController4 extends Controller
 
     public function index()
     {
+        $user = Auth::user();
+        $data = Interest::all()->where('user_id', '=', $user->id)->first();
+        if ($data == null) {
+            //IF no interest Added
+            $genres = Genre::all();
+            $casts = Cast::all();
+            $languages = Language::all();
+            $pcompanys = ProductionCompany::all();
+            $directors = Director::all();
+            $countries = Country::all();
+            return view('profile.interest.interest', ['genres' => $genres, 'casts' => $casts, 'languages' => $languages, 'pcompanys' => $pcompanys, 'directors' => $directors, 'countries' => $countries, 'user' => $user]);
+        }
         // Data preparation
         $data = $this->data2DArrayAll();
 
@@ -502,6 +516,31 @@ class RecommendationController4 extends Controller
     // }
 
     //end new
+
+    //index3
+    public function index3()
+    {
+
+        $user = Auth::user();
+        $cluster = Cluster::where('user_id', '=', $user->id)->first();
+        if (!$cluster) {
+            return view('profile.partials.edit', ['user' => $user]);
+        }
+        $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)->where('user_id', '!=', $user->id)->get();
+        $recommendedMoviesDetails = [];
+        foreach ($cluster_users as $cluster_user) {
+            $watch = WatchMovie::where('user_id', '=', $cluster_user->user_id)->get();
+            foreach ($watch as $w) {
+                $movie = Movie::find($w->movie_id);
+                if ($movie) {
+                    $recommendedMoviesDetails[] = $movie;
+                }
+            }
+        }
+        shuffle($recommendedMoviesDetails);
+
+        return view('pages.recom4', ['data' => $recommendedMoviesDetails]);
+    }
     // public function data2DArrayAll()
     // {
     //     $mData = Movie::all();
