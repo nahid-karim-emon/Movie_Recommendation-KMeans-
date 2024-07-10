@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
+use Phpml\Clustering\KMeans;
+use Phpml\Preprocessing\LabelEncoder;
 
 class ProfileController extends Controller
 {
@@ -53,6 +55,144 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
+    // public function update(Request $request)
+    // {
+    //     $data = User::find($request->userid);
+    //     $formFields = $request->validate([
+    //         'name' => 'required',
+    //         'mobile' => 'required',
+    //     ]);
+    //     //If user Gieven address
+    //     if ($request->has('address')) {
+    //         $formFields['address'] = $request->address;
+    //     }
+    //     //If user Gieven any PHOTO
+    //     if ($request->hasFile('photo')) {
+    //         $formFields['photo'] = $request->file('photo')->store('UserPhoto', 'public');
+    //     } else {
+    //         $formFields['photo'] = $request->prev_photo;
+    //     }
+    //     if ($request->has('age')) {
+    //         $formFields['age'] = $request->age;
+    //     }
+    //     if ($request->has('gender')) {
+    //         $formFields['gender'] = $request->gender;
+    //     }
+    //     if ($request->has('nationality')) {
+    //         $formFields['nationality'] = $request->nationality;
+    //     }
+    //     if ($request->has('educational_level')) {
+    //         $formFields['educational_level'] = $request->educational_level;
+    //     }
+    //     if ($request->has('language')) {
+    //         $formFields['language'] = $request->language;
+    //     }
+    //     if ($request->has('religion')) {
+    //         $formFields['religion'] = $request->religion;
+    //     }
+    //     if ($request->has('maritial_status')) {
+    //         $formFields['maritial_status'] = $request->maritial_status;
+    //     }
+    //     if ($request->has('occupation')) {
+    //         $formFields['occupation'] = $request->occupation;
+    //     }
+
+    //     $data->name = $request->name;
+    //     $data->mobile = $request->mobile;
+    //     $data->address = $request->address;
+    //     $data->photo = $formFields['photo'];
+    //     $data->age = $request->age;
+    //     $data->gender = $request->gender;
+    //     $data->nationality = $request->nationality;
+    //     $data->educational_level = $request->educational_level;
+    //     $data->language = $request->language;
+    //     $data->religion = $request->religion;
+    //     $data->maritial_status = $request->maritial_status;
+    //     $data->occupation = $request->occupation;
+    //     $data->updated_at = now();
+
+    //     $data->save();
+
+    //     return Redirect::route('user.profile.view')->with('success', 'Profile Updated');
+    // }
+
+    private function determineClusterGroup(User $user)
+    {
+        $defaultClusterCenters = [
+            // Bangladesh
+            [25, crc32('male'), crc32('Bangladeshi'), crc32('BSc'), crc32('Bangla'), crc32('Muslim'), crc32('Single'), crc32('Engineer')],
+            [30, crc32('female'), crc32('Bangladeshi'), crc32('MSc'), crc32('Bangla'), crc32('Hindu'), crc32('Married'), crc32('Teacher')],
+            [35, crc32('male'), crc32('Bangladeshi'), crc32('PhD'), crc32('Bangla'), crc32('Buddhist'), crc32('Single'), crc32('Scientist')],
+            // India
+            [50, crc32('female'), crc32('Indian'), crc32('BSc'), crc32('Hindi'), crc32('Hindu'), crc32('Single'), crc32('Lawyer')],
+            [55, crc32('male'), crc32('Indian'), crc32('MSc'), crc32('English'), crc32('Muslim'), crc32('Married'), crc32('Engineer')],
+            [60, crc32('female'), crc32('Indian'), crc32('PhD'), crc32('Bengali'), crc32('Christian'), crc32('Widowed'), crc32('Teacher')],
+            // Pakistan
+            [65, crc32('male'), crc32('Pakistani'), crc32('BSc'), crc32('Urdu'), crc32('Muslim'), crc32('Single'), crc32('Scientist')],
+            [70, crc32('female'), crc32('Pakistani'), crc32('MSc'), crc32('Punjabi'), crc32('Muslim'), crc32('Widowed'), crc32('Nurse')],
+            // England
+            [80, crc32('female'), crc32('English'), crc32('BSc'), crc32('English'), crc32('Christian'), crc32('Single'), crc32('Lawyer')],
+            [85, crc32('male'), crc32('English'), crc32('MSc'), crc32('English'), crc32('Christian'), crc32('Divorced'), crc32('Doctor')],
+            // USA
+            [95, crc32('male'), crc32('American'), crc32('BSc'), crc32('English'), crc32('Christian'), crc32('Single'), crc32('Engineer')],
+            [100, crc32('female'), crc32('American'), crc32('MSc'), crc32('Spanish'), crc32('Christian'), crc32('Married'), crc32('Teacher')],
+            // China
+            [110, crc32('female'), crc32('Chinese'), crc32('BSc'), crc32('Chinese'), crc32('Buddhist'), crc32('Single'), crc32('Engineer')],
+            [115, crc32('male'), crc32('Chinese'), crc32('MSc'), crc32('Mandarin'), crc32('Atheist'), crc32('Married'), crc32('Doctor')],
+            [120, crc32('female'), crc32('Chinese'), crc32('PhD'), crc32('Cantonese'), crc32('Buddhist'), crc32('Divorced'), crc32('Teacher')],
+        ];
+
+
+        // Convert user's categorical data using crc32
+        //dd($user->nationality);
+        $userSample = [
+            (float) $user->age,
+            (float) crc32($user->gender),
+            (float) crc32($user->nationality),
+            (float) crc32($user->educational_level),
+            (float) crc32($user->language),
+            (float) crc32($user->religion),
+            (float) crc32($user->maritial_status),
+            (float) crc32($user->occupation)
+        ];
+
+        // Find the closest cluster
+        $closestClusterIndex = $this->findClosestCluster($userSample, $defaultClusterCenters);
+
+        // dd($closestClusterIndex, $userSample, $defaultClusterCenters);
+        return $closestClusterIndex;
+    }
+
+    private function findClosestCluster(array $userSample, array $clusterCenters)
+    {
+        $closestClusterIndex = 0;
+        $closestDistance = PHP_FLOAT_MAX;
+
+        foreach ($clusterCenters as $index => $center) {
+            $distance = $this->euclideanDistance($userSample, $center);
+            //dd($distance);
+            if ($distance < $closestDistance) {
+                $closestDistance = $distance;
+                $closestClusterIndex = $index;
+            }
+        }
+
+        return $closestClusterIndex;
+    }
+
+    private function euclideanDistance(array $point1, array $point2)
+    {
+        $sum = 0;
+
+        for ($i = 0; $i < count($point1); $i++) {
+            $sum += pow($point1[$i] - $point2[$i], 2);
+        }
+
+        return sqrt($sum);
+    }
+
+
+
     public function update(Request $request)
     {
         $data = User::find($request->userid);
@@ -108,11 +248,20 @@ class ProfileController extends Controller
         $data->maritial_status = $request->maritial_status;
         $data->occupation = $request->occupation;
         $data->updated_at = now();
-
         $data->save();
+
+        // Clustering logic
+        $clusterGroupNumber = $this->determineClusterGroup($data);
+
+        // Insert into cluster table
+        \DB::table('clusters')->updateOrInsert(
+            ['user_id' => $data->id],
+            ['cluster' => $clusterGroupNumber, 'updated_at' => now()]
+        );
 
         return Redirect::route('user.profile.view')->with('success', 'Profile Updated');
     }
+
 
     /**
      * Delete the user's account.
