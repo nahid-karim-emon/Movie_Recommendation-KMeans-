@@ -36,6 +36,89 @@ class RecommendationController3 extends Controller
      */
 
 
+    // public function data2DArrayAll()
+    // {
+    //     $mData = Movie::all();
+    //     $uData = MovieCountry::all();
+    //     $vData = MoviePcompany::all();
+    //     $wData = MovieDirector::all();
+    //     $xData = MovieLanguage::all();
+    //     $yData = MovieGenre::all();
+    //     $zData = MovieCast::all();
+    //     $resultArray = [];
+    //     foreach ($mData as $mItem) {
+    //         foreach ($uData as $uItem) {
+    //             if ($uItem->movie_id == $mItem->id) {
+    //                 foreach ($vData as $vItem) {
+    //                     if ($vItem->movie_id == $mItem->id) {
+    //                         foreach ($wData as $wItem) {
+    //                             if ($wItem->movie_id == $mItem->id) {
+    //                                 foreach ($xData as $xItem) {
+    //                                     if ($xItem->movie_id == $mItem->id) {
+    //                                         foreach ($yData as $yItem) {
+    //                                             if ($yItem->movie_id == $mItem->id) {
+    //                                                 foreach ($zData as $zItem) {
+    //                                                     if ($zItem->movie_id == $mItem->id) {
+    //                                                         $resultArray[] = [
+    //                                                             0 => $mItem->id,
+    //                                                             1 => $uItem->country_id,
+    //                                                             2 => $vItem->pcompany_id,
+    //                                                             3 => $wItem->director_id,
+    //                                                             4 => $xItem->language_id,
+    //                                                             5 => $yItem->genre_id,
+    //                                                             6 => $zItem->cast_id,
+    //                                                         ];
+    //                                                     }
+    //                                                 }
+    //                                             }
+    //                                         }
+    //                                     }
+    //                                 }
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     //User Array
+    //     $user = Auth::user();
+    //     $data = Interest::all()->where('user_id', '=', $user->id)->first();
+    //     $id = $data->id;
+    //     //IF any interest Added
+    //     // $resultArray2 = [];
+    //     //IF any interest Added
+    //     $data = Interest::find($id);
+    //     $InterestGenredata = InterestGenre::all()->where('interest_id', '=', $id);
+    //     $InterestCastdata = InterestCast::all()->where('interest_id', '=', $id);
+    //     $InterestDirectordata = InterestDirector::all()->where('interest_id', '=', $id);
+    //     $InterestLanguagedata = InterestLanguage::all()->where('interest_id', '=', $id);
+    //     $InterestPcompanydata = InterestPcompany::all()->where('interest_id', '=', $id);
+    //     $InterestCountrydata = InterestCountry::all()->where('interest_id', '=', $id);
+    //     foreach ($InterestCountrydata as $uItem) {
+    //         foreach ($InterestPcompanydata as $vItem) {
+    //             foreach ($InterestDirectordata as $wItem) {
+    //                 foreach ($InterestLanguagedata as $xItem) {
+    //                     foreach ($InterestGenredata as $yItem) {
+    //                         foreach ($InterestCastdata as $zItem) {
+    //                             $resultArray[] = [
+    //                                 0 => '-1',
+    //                                 1 => $uItem->country_id,
+    //                                 2 => $vItem->pcompany_id,
+    //                                 3 => $wItem->director_id,
+    //                                 4 => $xItem->language_id,
+    //                                 5 => $yItem->genre_id,
+    //                                 6 => $zItem->cast_id,
+    //                             ];
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     // dd($resultArray2);
+    //     return $resultArray;
+    // }
     public function data2DArrayAll()
     {
         $mData = Movie::all();
@@ -46,6 +129,7 @@ class RecommendationController3 extends Controller
         $yData = MovieGenre::all();
         $zData = MovieCast::all();
         $resultArray = [];
+
         foreach ($mData as $mItem) {
             foreach ($uData as $uItem) {
                 if ($uItem->movie_id == $mItem->id) {
@@ -81,44 +165,46 @@ class RecommendationController3 extends Controller
                 }
             }
         }
-        //User Array
+
+        // User Interests
         $user = Auth::user();
-        $data = Interest::all()->where('user_id', '=', $user->id)->first();
-        $id = $data->id;
-        //IF any interest Added
-        // $resultArray2 = [];
-        //IF any interest Added
-        $data = Interest::find($id);
-        $InterestGenredata = InterestGenre::all()->where('interest_id', '=', $id);
-        $InterestCastdata = InterestCast::all()->where('interest_id', '=', $id);
-        $InterestDirectordata = InterestDirector::all()->where('interest_id', '=', $id);
-        $InterestLanguagedata = InterestLanguage::all()->where('interest_id', '=', $id);
-        $InterestPcompanydata = InterestPcompany::all()->where('interest_id', '=', $id);
-        $InterestCountrydata = InterestCountry::all()->where('interest_id', '=', $id);
-        foreach ($InterestCountrydata as $uItem) {
-            foreach ($InterestPcompanydata as $vItem) {
-                foreach ($InterestDirectordata as $wItem) {
-                    foreach ($InterestLanguagedata as $xItem) {
-                        foreach ($InterestGenredata as $yItem) {
-                            foreach ($InterestCastdata as $zItem) {
-                                $resultArray[] = [
-                                    0 => '-1',
-                                    1 => $uItem->country_id,
-                                    2 => $vItem->pcompany_id,
-                                    3 => $wItem->director_id,
-                                    4 => $xItem->language_id,
-                                    5 => $yItem->genre_id,
-                                    6 => $zItem->cast_id,
-                                ];
+        $data = Interest::where('user_id', '=', $user->id)->first();
+        if ($data) {
+            $id = $data->id;
+
+            $InterestGenredata = InterestGenre::where('interest_id', '=', $id)->get();
+            $InterestCastdata = InterestCast::where('interest_id', '=', $id)->get();
+            $InterestDirectordata = InterestDirector::where('interest_id', '=', $id)->get();
+            $InterestLanguagedata = InterestLanguage::where('interest_id', '=', $id)->get();
+            $InterestPcompanydata = InterestPcompany::where('interest_id', '=', $id)->get();
+            $InterestCountrydata = InterestCountry::where('interest_id', '=', $id)->get();
+
+            foreach ($InterestCountrydata as $uItem) {
+                foreach ($InterestPcompanydata as $vItem) {
+                    foreach ($InterestDirectordata as $wItem) {
+                        foreach ($InterestLanguagedata as $xItem) {
+                            foreach ($InterestGenredata as $yItem) {
+                                foreach ($InterestCastdata as $zItem) {
+                                    $resultArray[] = [
+                                        0 => '-1',
+                                        1 => $uItem->country_id,
+                                        2 => $vItem->pcompany_id,
+                                        3 => $wItem->director_id,
+                                        4 => $xItem->language_id,
+                                        5 => $yItem->genre_id,
+                                        6 => $zItem->cast_id,
+                                    ];
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        // dd($resultArray2);
+
         return $resultArray;
     }
+
     public function data2DArrayold()
     {
         $user = Auth::user();
@@ -217,38 +303,101 @@ class RecommendationController3 extends Controller
         return $resultArray;
     }
 
+    // public function index()
+    // {
+
+    //     $user = Auth::user();
+    //     $data = Interest::all()->where('user_id', '=', $user->id)->first();
+    //     if ($data == null) {
+    //         //IF no interest Added
+    //         $genres = Genre::all();
+    //         $casts = Cast::all();
+    //         $languages = Language::all();
+    //         $pcompanys = ProductionCompany::all();
+    //         $directors = Director::all();
+    //         $countries = Country::all();
+    //         return view('profile.interest.interest', ['genres' => $genres, 'casts' => $casts, 'languages' => $languages, 'pcompanys' => $pcompanys, 'directors' => $directors, 'countries' => $countries, 'user' => $user]);
+    //     }
+    //     //
+    //     // cluster
+    //     $data = $this->data2DArrayAll();
+    //     // Number of clusters
+    //     $numberOfClusters = 10;
+
+    //     // Kmean for Language
+    //     $result = $this->KmeansControl($numberOfClusters, $data);
+    //     //
+    //     $data = [];
+    //     foreach ($result[0] as $r) {
+    //         $data[] = Movie::find($r);
+    //     }
+    //     shuffle($data);
+    //     return view('pages.recom3', ['data' => $data, 'time' => $result[1]]);
+    // }
 
     public function index()
     {
-
-        $user = Auth::user();
-        $data = Interest::all()->where('user_id', '=', $user->id)->first();
-        if ($data == null) {
-            //IF no interest Added
-            $genres = Genre::all();
-            $casts = Cast::all();
-            $languages = Language::all();
-            $pcompanys = ProductionCompany::all();
-            $directors = Director::all();
-            $countries = Country::all();
-            return view('profile.interest.interest', ['genres' => $genres, 'casts' => $casts, 'languages' => $languages, 'pcompanys' => $pcompanys, 'directors' => $directors, 'countries' => $countries, 'user' => $user]);
-        }
-        //
-        // cluster
+        // Data preparation
         $data = $this->data2DArrayAll();
-        // Number of clusters
-        $numberOfClusters = 10;
 
-        // Kmean for Language
-        $result = $this->KmeansControl($numberOfClusters, $data);
-        //
-        $data = [];
-        foreach ($result[0] as $r) {
-            $data[] = Movie::find($r);
+        // Filter out entries with null values to avoid issues during training
+        $filteredData = array_filter($data, function ($row) {
+            return !in_array(null, $row, true);
+        });
+
+        // Extract features (excluding the first column which is the movie ID)
+        $samples = array_map(function ($row) {
+            return array_slice($row, 1);
+        }, $filteredData);
+
+        // Measure time before clustering
+        $startTime = microtime(true);
+
+        // Implement K-Means clustering
+        $kmeans = new KMeans(10); // Correct usage without Euclidean
+        $clusters = $kmeans->cluster($samples);
+
+        // Measure time after clustering
+        $endTime = microtime(true);
+
+        // Calculate elapsed time
+        $elapsedTime = $endTime - $startTime;
+
+        // Collect movie IDs from clusters
+        $recommendedMovieIds = [];
+        foreach ($clusters as $cluster) {
+            foreach ($cluster as $sample) {
+                $index = array_search($sample, $samples);
+                if ($index !== false) {
+                    $recommendedMovieIds[] = $filteredData[$index][0];
+                }
+            }
         }
-        shuffle($data);
-        return view('pages.recom3', ['data' => $data, 'time' => $result[1]]);
+
+        // Ensure we recommend at least 10 unique movies
+        $recommendedMovieIds = array_unique($recommendedMovieIds);
+        $numRecommendations = 10;
+        if (count($recommendedMovieIds) < $numRecommendations) {
+            $additionalMovies = Movie::inRandomOrder()->take($numRecommendations - count($recommendedMovieIds))->pluck('id')->toArray();
+            $recommendedMovieIds = array_merge($recommendedMovieIds, $additionalMovies);
+        }
+
+        // Fetch movie details for recommendations
+        $recommendedMoviesDetails = [];
+        foreach ($recommendedMovieIds as $movieId) {
+            $movie = Movie::find($movieId);
+            if ($movie) {
+                $recommendedMoviesDetails[] = $movie;
+            }
+        }
+
+        // Shuffle the recommended movies (optional)
+        shuffle($recommendedMoviesDetails);
+
+        return view('pages.recom3', ['data' => $recommendedMoviesDetails, 'time' => $elapsedTime]);
     }
+
+
 
     public function KmeansControl($numberOfClusters, $data)
     {

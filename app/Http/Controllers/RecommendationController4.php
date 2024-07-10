@@ -42,6 +42,90 @@ class RecommendationController4 extends Controller
 
     //new
 
+    // public function data2DArrayAll()
+    // {
+    //     $mData = Movie::all();
+    //     $uData = MovieCountry::all();
+    //     $vData = MoviePcompany::all();
+    //     $wData = MovieDirector::all();
+    //     $xData = MovieLanguage::all();
+    //     $yData = MovieGenre::all();
+    //     $zData = MovieCast::all();
+    //     $resultArray = [];
+    //     foreach ($mData as $mItem) {
+    //         foreach ($uData as $uItem) {
+    //             if ($uItem->movie_id == $mItem->id) {
+    //                 foreach ($vData as $vItem) {
+    //                     if ($vItem->movie_id == $mItem->id) {
+    //                         foreach ($wData as $wItem) {
+    //                             if ($wItem->movie_id == $mItem->id) {
+    //                                 foreach ($xData as $xItem) {
+    //                                     if ($xItem->movie_id == $mItem->id) {
+    //                                         foreach ($yData as $yItem) {
+    //                                             if ($yItem->movie_id == $mItem->id) {
+    //                                                 foreach ($zData as $zItem) {
+    //                                                     if ($zItem->movie_id == $mItem->id) {
+    //                                                         $resultArray[] = [
+    //                                                             0 => $mItem->id,
+    //                                                             1 => $uItem->country_id,
+    //                                                             2 => $vItem->pcompany_id,
+    //                                                             3 => $wItem->director_id,
+    //                                                             4 => $xItem->language_id,
+    //                                                             5 => $yItem->genre_id,
+    //                                                             6 => $zItem->cast_id,
+    //                                                         ];
+    //                                                     }
+    //                                                 }
+    //                                             }
+    //                                         }
+    //                                     }
+    //                                 }
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     //User Array
+    //     $user = Auth::user();
+    //     $data = Interest::all()->where('user_id', '=', $user->id)->first();
+    //     $id = $data->id;
+    //     //IF any interest Added
+    //     // $resultArray2 = [];
+    //     //IF any interest Added
+    //     $data = Interest::find($id);
+    //     $InterestGenredata = InterestGenre::all()->where('interest_id', '=', $id);
+    //     $InterestCastdata = InterestCast::all()->where('interest_id', '=', $id);
+    //     $InterestDirectordata = InterestDirector::all()->where('interest_id', '=', $id);
+    //     $InterestLanguagedata = InterestLanguage::all()->where('interest_id', '=', $id);
+    //     $InterestPcompanydata = InterestPcompany::all()->where('interest_id', '=', $id);
+    //     $InterestCountrydata = InterestCountry::all()->where('interest_id', '=', $id);
+    //     foreach ($InterestCountrydata as $uItem) {
+    //         foreach ($InterestPcompanydata as $vItem) {
+    //             foreach ($InterestDirectordata as $wItem) {
+    //                 foreach ($InterestLanguagedata as $xItem) {
+    //                     foreach ($InterestGenredata as $yItem) {
+    //                         foreach ($InterestCastdata as $zItem) {
+    //                             $resultArray[] = [
+    //                                 0 => '-1',
+    //                                 1 => $uItem->country_id,
+    //                                 2 => $vItem->pcompany_id,
+    //                                 3 => $wItem->director_id,
+    //                                 4 => $xItem->language_id,
+    //                                 5 => $yItem->genre_id,
+    //                                 6 => $zItem->cast_id,
+    //                             ];
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     // dd($resultArray2);
+    //     return $resultArray;
+    // }
+
     public function data2DArrayAll()
     {
         $mData = Movie::all();
@@ -52,6 +136,7 @@ class RecommendationController4 extends Controller
         $yData = MovieGenre::all();
         $zData = MovieCast::all();
         $resultArray = [];
+
         foreach ($mData as $mItem) {
             foreach ($uData as $uItem) {
                 if ($uItem->movie_id == $mItem->id) {
@@ -67,12 +152,12 @@ class RecommendationController4 extends Controller
                                                         if ($zItem->movie_id == $mItem->id) {
                                                             $resultArray[] = [
                                                                 0 => $mItem->id,
-                                                                1 => $uItem->country_id,
-                                                                2 => $vItem->pcompany_id,
-                                                                3 => $wItem->director_id,
-                                                                4 => $xItem->language_id,
-                                                                5 => $yItem->genre_id,
-                                                                6 => $zItem->cast_id,
+                                                                1 => $uItem->country_id ?? null,
+                                                                2 => $vItem->pcompany_id ?? null,
+                                                                3 => $wItem->director_id ?? null,
+                                                                4 => $xItem->language_id ?? null,
+                                                                5 => $yItem->genre_id ?? null,
+                                                                6 => $zItem->cast_id ?? null,
                                                             ];
                                                         }
                                                     }
@@ -87,44 +172,48 @@ class RecommendationController4 extends Controller
                 }
             }
         }
+
         //User Array
         $user = Auth::user();
-        $data = Interest::all()->where('user_id', '=', $user->id)->first();
-        $id = $data->id;
-        //IF any interest Added
-        // $resultArray2 = [];
-        //IF any interest Added
-        $data = Interest::find($id);
-        $InterestGenredata = InterestGenre::all()->where('interest_id', '=', $id);
-        $InterestCastdata = InterestCast::all()->where('interest_id', '=', $id);
-        $InterestDirectordata = InterestDirector::all()->where('interest_id', '=', $id);
-        $InterestLanguagedata = InterestLanguage::all()->where('interest_id', '=', $id);
-        $InterestPcompanydata = InterestPcompany::all()->where('interest_id', '=', $id);
-        $InterestCountrydata = InterestCountry::all()->where('interest_id', '=', $id);
-        foreach ($InterestCountrydata as $uItem) {
-            foreach ($InterestPcompanydata as $vItem) {
-                foreach ($InterestDirectordata as $wItem) {
-                    foreach ($InterestLanguagedata as $xItem) {
-                        foreach ($InterestGenredata as $yItem) {
-                            foreach ($InterestCastdata as $zItem) {
-                                $resultArray[] = [
-                                    0 => '-1',
-                                    1 => $uItem->country_id,
-                                    2 => $vItem->pcompany_id,
-                                    3 => $wItem->director_id,
-                                    4 => $xItem->language_id,
-                                    5 => $yItem->genre_id,
-                                    6 => $zItem->cast_id,
-                                ];
+        $data = Interest::where('user_id', '=', $user->id)->first();
+        if ($data) {
+            $id = $data->id;
+
+            $InterestGenredata = InterestGenre::where('interest_id', '=', $id)->get();
+            $InterestCastdata = InterestCast::where('interest_id', '=', $id)->get();
+            $InterestDirectordata = InterestDirector::where('interest_id', '=', $id)->get();
+            $InterestLanguagedata = InterestLanguage::where('interest_id', '=', $id)->get();
+            $InterestPcompanydata = InterestPcompany::where('interest_id', '=', $id)->get();
+            $InterestCountrydata = InterestCountry::where('interest_id', '=', $id)->get();
+
+            foreach ($InterestCountrydata as $uItem) {
+                foreach ($InterestPcompanydata as $vItem) {
+                    foreach ($InterestDirectordata as $wItem) {
+                        foreach ($InterestLanguagedata as $xItem) {
+                            foreach ($InterestGenredata as $yItem) {
+                                foreach ($InterestCastdata as $zItem) {
+                                    $resultArray[] = [
+                                        0 => '-1',
+                                        1 => $uItem->country_id ?? null,
+                                        2 => $vItem->pcompany_id ?? null,
+                                        3 => $wItem->director_id ?? null,
+                                        4 => $xItem->language_id ?? null,
+                                        5 => $yItem->genre_id ?? null,
+                                        6 => $zItem->cast_id ?? null,
+                                    ];
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        // dd($resultArray2);
+
         return $resultArray;
     }
+
+
+
     public function data2DArrayold()
     {
         $user = Auth::user();
@@ -224,18 +313,94 @@ class RecommendationController4 extends Controller
     }
 
 
+    // public function index()
+    // {
+    //     // Data preparation
+    //     $data = $this->data2DArray();
+
+    //     // Split data into features and labels
+    //     $samples = [];
+    //     $labels = [];
+    //     foreach ($data as $row) {
+    //         $samples[] = [$row[1], $row[2]]; // Features: Language ID and Genre ID (adjust based on your data)
+    //         $labels[] = $row[0]; // Label: Movie ID
+    //     }
+    //     // KNN classification
+    //     $classifier = new KNearestNeighbors();
+    //     $dataset = new ArrayDataset($samples, $labels);
+    //     $split = new RandomSplit($dataset, 0.1);
+
+    //     // Train the classifier
+    //     $classifier->train($split->getTrainSamples(), $split->getTrainLabels());
+
+    //     // Make predictions on the test set
+    //     $predictions = $classifier->predict($split->getTestSamples());
+
+    //     // Calculate accuracy (optional)
+    //     $accuracy = Accuracy::score($split->getTestLabels(), $predictions);
+
+    //     // Retrieve recommended movies (choose one approach)
+    //     $recommendedMovies = [];
+
+    //     // Option 1: Recommend all predicted movies (uncomment this block)
+    //     /*
+    //     foreach ($predictions as $index => $predictedMovieId) {
+    //       $recommendedMovies[] = $predictedMovieId;
+    //     }
+    //     */
+
+    //     // Option 2: Recommend limited number of unique movies (uncomment this block)
+    //     $numRecommendations = 20; // Adjust this value for desired number
+    //     $count = 0;
+    //     foreach ($predictions as $index => $predictedMovieId) {
+    //         if (!in_array($predictedMovieId, $recommendedMovies)) {
+    //             $recommendedMovies[] = $predictedMovieId;
+    //             $count++;
+    //         }
+    //         if ($count >= $numRecommendations) {
+    //             break; // Stop recommending once desired number is reached
+    //         }
+    //     }
+
+    //     // Fetch movie details for recommendations
+    //     $data = [];
+    //     foreach ($recommendedMovies as $r) {
+    //         $data[] = Movie::find($r);
+    //     }
+
+    //     // Shuffle the recommended movies (optional)
+    //     shuffle($data);
+
+    //     return view('pages.recom3', ['data' => $data, 'time' => $accuracy]);
+    // }
+
     public function index()
     {
         // Data preparation
-        $data = $this->data2DArray();
+        $data = $this->data2DArrayAll();
+
+        // Filter out entries with null values to avoid issues during training
+        $filteredData = array_filter($data, function ($row) {
+            return !in_array(null, $row, true);
+        });
 
         // Split data into features and labels
         $samples = [];
         $labels = [];
-        foreach ($data as $row) {
-            $samples[] = [$row[1], $row[2]]; // Features: Language ID and Genre ID (adjust based on your data)
-            $labels[] = $row[0]; // Label: Movie ID
+        foreach ($filteredData as $row) {
+            if ($row[0] != '-1') {
+                $samples[] = [
+                    $row[1],
+                    $row[2],
+                    $row[3],
+                    $row[4],
+                    $row[5],
+                    $row[6]
+                ];
+                $labels[] = $row[0];
+            }
         }
+
         // KNN classification
         $classifier = new KNearestNeighbors();
         $dataset = new ArrayDataset($samples, $labels);
@@ -250,40 +415,37 @@ class RecommendationController4 extends Controller
         // Calculate accuracy (optional)
         $accuracy = Accuracy::score($split->getTestLabels(), $predictions);
 
-        // Retrieve recommended movies (choose one approach)
+        // Retrieve recommended movies
         $recommendedMovies = [];
 
-        // Option 1: Recommend all predicted movies (uncomment this block)
-        /*
-        foreach ($predictions as $index => $predictedMovieId) {
-          $recommendedMovies[] = $predictedMovieId;
-        }
-        */
-
-        // Option 2: Recommend limited number of unique movies (uncomment this block)
-        $numRecommendations = 20; // Adjust this value for desired number
+        // Recommend limited number of unique movies
+        $numRecommendations = 10; // Limit to 10 recommendations
         $count = 0;
-        foreach ($predictions as $index => $predictedMovieId) {
+        foreach ($predictions as $predictedMovieId) {
             if (!in_array($predictedMovieId, $recommendedMovies)) {
                 $recommendedMovies[] = $predictedMovieId;
                 $count++;
             }
             if ($count >= $numRecommendations) {
-                break; // Stop recommending once desired number is reached
+                break; // Stop recommending once the desired number is reached
             }
         }
 
         // Fetch movie details for recommendations
-        $data = [];
-        foreach ($recommendedMovies as $r) {
-            $data[] = Movie::find($r);
+        $recommendedMoviesDetails = [];
+        foreach ($recommendedMovies as $movieId) {
+            $movie = Movie::find($movieId);
+            if ($movie) {
+                $recommendedMoviesDetails[] = $movie;
+            }
         }
 
         // Shuffle the recommended movies (optional)
-        shuffle($data);
+        shuffle($recommendedMoviesDetails);
 
-        return view('pages.recom3', ['data' => $data, 'time' => $accuracy]);
+        return view('pages.recom3', ['data' => $recommendedMoviesDetails, 'time' => $accuracy]);
     }
+
 
 
     // public function index()
