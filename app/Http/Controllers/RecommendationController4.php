@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cast;
-use App\Models\Cluster;
 use App\Models\User;
 use App\Models\Genre;
 use App\Models\Movie;
+use App\Models\Cluster;
 use App\Models\Country;
 use App\Models\Director;
 use App\Models\Interest;
@@ -14,26 +14,27 @@ use App\Models\Language;
 use App\Models\MovieCast;
 use Illuminate\View\View;
 use App\Models\MovieGenre;
+use App\Models\WatchMovie;
+use Phpml\Metric\Accuracy;
 use App\Models\InterestCast;
+use App\Models\MovieCountry;
 use Illuminate\Http\Request;
 use App\Models\InterestGenre;
 use App\Models\MovieDirector;
 use App\Models\MovieLanguage;
+use App\Models\MoviePcompany;
+use Phpml\Clustering\KMeans2;
 use App\Models\InterestRating;
 use App\Models\InterestCountry;
+use Phpml\Dataset\ArrayDataset;
 use App\Models\InterestDirector;
 use App\Models\InterestLanguage;
 use App\Models\InterestPcompany;
-use App\Models\MovieCountry;
-use App\Models\MoviePcompany;
 use App\Models\ProductionCompany;
-use App\Models\WatchMovie;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Phpml\Clustering\KMeans2;
-use Phpml\Classification\KNearestNeighbors;
-use Phpml\Dataset\ArrayDataset;
-use Phpml\Metric\Accuracy;
 use Phpml\CrossValidation\RandomSplit;
+use Phpml\Classification\KNearestNeighbors;
 
 
 class RecommendationController4 extends Controller
@@ -541,6 +542,96 @@ class RecommendationController4 extends Controller
 
         return view('pages.recom4', ['data' => $recommendedMoviesDetails]);
     }
+
+    //apply cosine similarity
+    public function index4()
+    {
+        $user = Auth::user();
+
+        // Get user-item rating matrix
+        $ratings = DB::table('watch_movies')
+            ->select('user_id', 'movie_id', 'rating')
+            ->get();
+
+        // Create rating matrix
+        $ratingMatrix = [];
+        foreach ($ratings as $rating) {
+            $ratingMatrix[$rating->user_id][$rating->movie_id] = $rating->rating;
+        }
+        // dd($ratingMatrix);
+
+        // Calculate cosine similarity
+        $similarity = [];
+        $userRatings = $ratingMatrix[$user->id] ?? [];
+        //dd($userRatings);
+        if (empty($userRatings)) {
+            return view('pages.recom4', ['data' => []]);
+        }
+        foreach ($ratingMatrix as $other_user_id => $other_user_ratings) {
+            if ($other_user_id != $user->id) {
+                $similarity[$other_user_id] = $this->cosineSimilarity($userRatings, $other_user_ratings);
+            }
+        }
+        //dd($similarity);
+        arsort($similarity);
+        //get 1st users id from similarity array
+        $topUsers = array_keys(array_slice($similarity, 0, 1, true));
+        // dd($topUsers);
+        $top_id = $topUsers[0];
+        // Get recommended movies
+        $recommendedMoviesDetails = [];
+
+        $watch = WatchMovie::where('user_id', '=', $top_id)->get();
+        foreach ($watch as $w) {
+            $movie = Movie::find($w->movie_id);
+            if ($movie) {
+                $recommendedMoviesDetails[] = $movie;
+            }
+        }
+        // foreach ($topUsers as $similar_user) {
+        //     $watchedMovies = DB::table('watch_movies')
+        //         ->where('user_id', $similar_user)
+        //         ->whereNotIn('movie_id', array_keys($userRatings))
+        //         ->select('movie_id', DB::raw('AVG(rating) as avg_rating'))
+        //         ->groupBy('movie_id')
+        //         ->orderBy('avg_rating', 'desc')
+        //         ->get();
+
+        //     foreach ($watchedMovies as $watchedMovie) {
+        //         $movie = Movie::find($watchedMovie->movie_id);
+        //         if ($movie) {
+        //             $movie->avg_rating = $watchedMovie->avg_rating;
+        //             $recommendedMoviesDetails[] = $movie;
+        //         }
+        //     }
+        // }
+        shuffle($recommendedMoviesDetails);
+
+        return view('pages.recom4', ['data' => $recommendedMoviesDetails]);
+    }
+
+    private function cosineSimilarity($vec1, $vec2)
+    {
+        $dotProduct = 0.0;
+        $normA = 0.0;
+        $normB = 0.0;
+
+        foreach ($vec1 as $key => $value) {
+            $dotProduct += $value * ($vec2[$key] ?? 0);
+            $normA += pow($value, 2);
+        }
+
+        foreach ($vec2 as $value) {
+            $normB += pow($value, 2);
+        }
+
+        if ($normA == 0.0 || $normB == 0.0) {
+            return 0.0;
+        }
+
+        return $dotProduct / (sqrt($normA) * sqrt($normB));
+    }
+
     // public function data2DArrayAll()
     // {
     //     $mData = Movie::all();

@@ -159,7 +159,7 @@ class ProfileController extends Controller
         // Find the closest cluster
         $closestClusterIndex = $this->findClosestCluster($userSample, $defaultClusterCenters);
 
-        // dd($closestClusterIndex, $userSample, $defaultClusterCenters);
+        //dd($closestClusterIndex, $userSample, $defaultClusterCenters);
         return $closestClusterIndex;
     }
 
