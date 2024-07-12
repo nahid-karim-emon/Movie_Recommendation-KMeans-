@@ -381,15 +381,18 @@ class RecommendationController4 extends Controller
     {
         $user = Auth::user();
         $data = Interest::all()->where('user_id', '=', $user->id)->first();
+        // if ($data == null) {
+        //     //IF no interest Added
+        //     $genres = Genre::all();
+        //     $casts = Cast::all();
+        //     $languages = Language::all();
+        //     $pcompanys = ProductionCompany::all();
+        //     $directors = Director::all();
+        //     $countries = Country::all();
+        //     return view('profile.interest.interest', ['genres' => $genres, 'casts' => $casts, 'languages' => $languages, 'pcompanys' => $pcompanys, 'directors' => $directors, 'countries' => $countries, 'user' => $user]);
+        // }
         if ($data == null) {
-            //IF no interest Added
-            $genres = Genre::all();
-            $casts = Cast::all();
-            $languages = Language::all();
-            $pcompanys = ProductionCompany::all();
-            $directors = Director::all();
-            $countries = Country::all();
-            return view('profile.interest.interest', ['genres' => $genres, 'casts' => $casts, 'languages' => $languages, 'pcompanys' => $pcompanys, 'directors' => $directors, 'countries' => $countries, 'user' => $user]);
+            return redirect()->route('user.dashboard')->with('error', 'Please add some interests to get recommendations.');
         }
         // Data preparation
         $data = $this->data2DArrayAll();
@@ -524,8 +527,8 @@ class RecommendationController4 extends Controller
 
         $user = Auth::user();
         $cluster = Cluster::where('user_id', '=', $user->id)->first();
-        if (!$cluster) {
-            return view('profile.partials.edit', ['user' => $user]);
+        if ($cluster == null) {
+            return redirect()->route('user.dashboard')->with('error', 'Please update your profile to get recommendations.');
         }
         $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)->where('user_id', '!=', $user->id)->get();
         $recommendedMoviesDetails = [];
@@ -539,6 +542,10 @@ class RecommendationController4 extends Controller
             }
         }
         shuffle($recommendedMoviesDetails);
+
+        if (count($recommendedMoviesDetails) == 0) {
+            return redirect()->route('user.dashboard')->with('error', 'Sorry no recommendations available.');
+        }
 
         return view('pages.recom4', ['data' => $recommendedMoviesDetails]);
     }
@@ -564,8 +571,11 @@ class RecommendationController4 extends Controller
         $similarity = [];
         $userRatings = $ratingMatrix[$user->id] ?? [];
         //dd($userRatings);
+        // if (empty($userRatings)) {
+        //     return view('pages.recom4', ['data' => []]);
+        // }
         if (empty($userRatings)) {
-            return view('pages.recom4', ['data' => []]);
+            return redirect()->route('user.dashboard')->with('error', 'Please rate some movies to get recommendations.');
         }
         foreach ($ratingMatrix as $other_user_id => $other_user_ratings) {
             if ($other_user_id != $user->id) {

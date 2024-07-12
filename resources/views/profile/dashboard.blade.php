@@ -5,7 +5,17 @@
 <!-- Content Row -->
 <div class="row">
 
-
+    <!-- Error Message Alert -->
+    @if (session('error'))
+        <div class="col-12 mb-4">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+    @endif
     <!-- Total Movies Card Example -->
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-info shadow h-100 py-2">

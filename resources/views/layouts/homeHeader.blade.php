@@ -111,10 +111,11 @@
                   {{-- <li><a class="dropdown-item" href="{{ route('user.dashboard') }}">Dashboard</a></li>
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.view') }}">Recommendation (Euclidean)</a></li>
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.viewm') }}">Recommendation (Manhantan)</a></li> --}}
-                  <li><a class="dropdown-item" href="{{ route('user.recommendation.view8') }}">Recommendation (Collaborative Filtering usng Cosine similarity)</a></li>
+                  <li><a class="dropdown-item" href="{{ route('user.recommendation.view9') }}">Recommendation (Hybrid Recommendation)</a></li>
+                  <li><a class="dropdown-item" href="{{ route('user.recommendation.view8') }}">Recommendation (Collaborative Recommendation using Cosine similarity)</a></li>
                   <li><a class="dropdown-item" href="{{ route('user.recommendation.view7') }}">Recommendation (Based On Demographic Information)</a></li>
-                  <li><a class="dropdown-item" href="{{ route('user.recommendation.view3') }}">Recommendation (K-Means Clustering)</a></li>
-                  <li><a class="dropdown-item" href="{{ route('user.recommendation.view4') }}">Recommendation (K-Nearest Neighbour)</a></li>
+                  <li><a class="dropdown-item" href="{{ route('user.recommendation.view3') }}">Recommendation (Content Based Recommendation using K-Means Clustering)</a></li>
+                  <li><a class="dropdown-item" href="{{ route('user.recommendation.view4') }}">Recommendation (Content Based Recommendation using K-Nearest Neighbour)</a></li>
                 </ul>
               </li>
               {{-- <li><a class="dropdown-item" href="{{ route('user.profile.view') }}">Profile</a></li> --}}

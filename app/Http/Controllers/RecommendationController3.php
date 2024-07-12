@@ -13,21 +13,23 @@ use App\Models\Language;
 use App\Models\MovieCast;
 use Illuminate\View\View;
 use App\Models\MovieGenre;
+use App\Models\WatchMovie;
 use App\Models\InterestCast;
+use App\Models\MovieCountry;
 use Illuminate\Http\Request;
+use Phpml\Clustering\KMeans;
 use App\Models\InterestGenre;
 use App\Models\MovieDirector;
 use App\Models\MovieLanguage;
+use App\Models\MoviePcompany;
 use App\Models\InterestRating;
 use App\Models\InterestCountry;
 use App\Models\InterestDirector;
 use App\Models\InterestLanguage;
 use App\Models\InterestPcompany;
-use App\Models\MovieCountry;
-use App\Models\MoviePcompany;
 use App\Models\ProductionCompany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Phpml\Clustering\KMeans;
 
 class RecommendationController3 extends Controller
 {
@@ -340,15 +342,18 @@ class RecommendationController3 extends Controller
 
         $user = Auth::user();
         $data = Interest::all()->where('user_id', '=', $user->id)->first();
+        // if ($data == null) {
+        //     //IF no interest Added
+        //     $genres = Genre::all();
+        //     $casts = Cast::all();
+        //     $languages = Language::all();
+        //     $pcompanys = ProductionCompany::all();
+        //     $directors = Director::all();
+        //     $countries = Country::all();
+        //     return view('profile.interest.interest', ['genres' => $genres, 'casts' => $casts, 'languages' => $languages, 'pcompanys' => $pcompanys, 'directors' => $directors, 'countries' => $countries, 'user' => $user]);
+        // }
         if ($data == null) {
-            //IF no interest Added
-            $genres = Genre::all();
-            $casts = Cast::all();
-            $languages = Language::all();
-            $pcompanys = ProductionCompany::all();
-            $directors = Director::all();
-            $countries = Country::all();
-            return view('profile.interest.interest', ['genres' => $genres, 'casts' => $casts, 'languages' => $languages, 'pcompanys' => $pcompanys, 'directors' => $directors, 'countries' => $countries, 'user' => $user]);
+            return redirect()->route('user.dashboard')->with('error', 'Please add some interests to get recommendations.');
         }
         // Data preparation
         $data = $this->data2DArrayAll();
@@ -408,6 +413,154 @@ class RecommendationController3 extends Controller
         shuffle($recommendedMoviesDetails);
 
         return view('pages.recom3', ['data' => $recommendedMoviesDetails, 'time' => $elapsedTime]);
+    }
+
+    //hybrid Recommender System
+    public function hybridRecommendations()
+    {
+        $user = Auth::user();
+
+        // Content-based recommendations
+        $contentBasedRecommendations = $this->getContentBasedRecommendations($user);
+
+        // Collaborative filtering recommendations
+        $collaborativeRecommendations = $this->getCollaborativeRecommendations($user);
+
+        //if both empty
+        if (empty($contentBasedRecommendations) && empty($collaborativeRecommendations)) {
+            return redirect()->route('user.dashboard')->with('error', 'Please add some interests and rate some movies to get recommendations.');
+        }
+
+        if (empty($contentBasedRecommendations)) {
+            return redirect()->route('user.dashboard')->with('error', 'Please add some interests to get recommendations.');
+        }
+
+        if (empty($collaborativeRecommendations)) {
+            return redirect()->route('user.dashboard')->with('error', 'Please rate some movies to get recommendations.');
+        }
+
+        // Combine recommendations
+        $combinedRecommendations = array_unique(array_merge($contentBasedRecommendations, $collaborativeRecommendations), SORT_REGULAR);
+
+        // Fetch movie details
+        $recommendedMoviesDetails = [];
+        foreach ($combinedRecommendations as $movieId) {
+            $movie = Movie::find($movieId);
+            if ($movie) {
+                $recommendedMoviesDetails[] = $movie;
+            }
+        }
+
+        // Shuffle the recommended movies (optional)
+        shuffle($recommendedMoviesDetails);
+
+        return view('pages.recom4', ['data' => $recommendedMoviesDetails]);
+    }
+
+    private function getContentBasedRecommendations($user)
+    {
+        // Data preparation
+        $data = $this->data2DArrayAll();
+        $data1 = Interest::all()->where('user_id', '=', $user->id)->first();
+        if ($data1 == null) {
+            return [];
+        }
+        // Filter out entries with null values to avoid issues during training
+        $filteredData = array_filter($data, function ($row) {
+            return !in_array(null, $row, true);
+        });
+
+        // Extract features (excluding the first column which is the movie ID)
+        $samples = array_map(function ($row) {
+            return array_slice($row, 1);
+        }, $filteredData);
+
+        // Implement K-Means clustering
+        $kmeans = new KMeans(10);
+        $clusters = $kmeans->cluster($samples);
+
+        // Collect movie IDs from clusters
+        $recommendedMovieIds = [];
+        foreach ($clusters as $cluster) {
+            foreach ($cluster as $sample) {
+                $index = array_search($sample, $samples);
+                if ($index !== false) {
+                    $recommendedMovieIds[] = $filteredData[$index][0];
+                }
+            }
+        }
+
+        // Ensure we recommend at least 10 unique movies
+        $recommendedMovieIds = array_unique($recommendedMovieIds);
+        $numRecommendations = 10;
+        if (count($recommendedMovieIds) < $numRecommendations) {
+            $additionalMovies = Movie::inRandomOrder()->take($numRecommendations - count($recommendedMovieIds))->pluck('id')->toArray();
+            $recommendedMovieIds = array_merge($recommendedMovieIds, $additionalMovies);
+        }
+
+        return $recommendedMovieIds;
+    }
+
+    private function getCollaborativeRecommendations($user)
+    {
+        // Get user-item rating matrix
+        $ratings = DB::table('watch_movies')
+            ->select('user_id', 'movie_id', 'rating')
+            ->get();
+
+        // Create rating matrix
+        $ratingMatrix = [];
+        foreach ($ratings as $rating) {
+            $ratingMatrix[$rating->user_id][$rating->movie_id] = $rating->rating;
+        }
+
+        // Calculate cosine similarity
+        $similarity = [];
+        $userRatings = $ratingMatrix[$user->id] ?? [];
+        if (empty($userRatings)) {
+            return [];
+        }
+        foreach ($ratingMatrix as $other_user_id => $other_user_ratings) {
+            if ($other_user_id != $user->id) {
+                $similarity[$other_user_id] = $this->cosineSimilarity($userRatings, $other_user_ratings);
+            }
+        }
+
+        arsort($similarity);
+        // Get the most similar user's ID
+        $topUsers = array_keys(array_slice($similarity, 0, 1, true));
+        $top_id = $topUsers[0];
+
+        // Get recommended movies
+        $recommendedMovieIds = [];
+        $watch = WatchMovie::where('user_id', '=', $top_id)->get();
+        foreach ($watch as $w) {
+            $recommendedMovieIds[] = $w->movie_id;
+        }
+
+        return $recommendedMovieIds;
+    }
+
+    private function cosineSimilarity($vec1, $vec2)
+    {
+        $dotProduct = 0.0;
+        $normA = 0.0;
+        $normB = 0.0;
+
+        foreach ($vec1 as $key => $value) {
+            $dotProduct += $value * ($vec2[$key] ?? 0);
+            $normA += pow($value, 2);
+        }
+
+        foreach ($vec2 as $value) {
+            $normB += pow($value, 2);
+        }
+
+        if ($normA == 0.0 || $normB == 0.0) {
+            return 0.0;
+        }
+
+        return $dotProduct / (sqrt($normA) * sqrt($normB));
     }
 
 
