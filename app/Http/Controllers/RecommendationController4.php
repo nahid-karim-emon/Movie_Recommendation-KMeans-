@@ -546,8 +546,9 @@ class RecommendationController4 extends Controller
         if (count($recommendedMoviesDetails) == 0) {
             return redirect()->route('user.dashboard')->with('error', 'Sorry no recommendations available.');
         }
-
-        return view('pages.recom4', ['data' => $recommendedMoviesDetails]);
+        //execution time
+        $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+        return view('pages.recom3', ['data' => $recommendedMoviesDetails, 'time' => $time]);
     }
 
     //apply cosine similarity
