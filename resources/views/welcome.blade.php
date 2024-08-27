@@ -4,6 +4,12 @@
 <!-- End of Header -->
 
 <section id="center" class="center_home">
+    <style>
+        body {
+        font-family: 'Arial, sans-serif';
+        background-color: #F8F9FA;
+      }
+    </style>
     <div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-indicators">
             <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active"

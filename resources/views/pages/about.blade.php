@@ -5,6 +5,12 @@
 
 
 <section id="center" class="center_o pt-5">
+  <style>
+          body {
+        font-family: 'Arial, sans-serif';
+        background-color: #F8F9FA;
+      }
+  </style>
   <div class="container">
     <div class="row center_o1 text-center">
      <div class="col-md-12">
