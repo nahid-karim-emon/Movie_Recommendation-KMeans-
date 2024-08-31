@@ -305,115 +305,108 @@ class RecommendationController3 extends Controller
         return $resultArray;
     }
 
-    // public function index()
-    // {
-
-    //     $user = Auth::user();
-    //     $data = Interest::all()->where('user_id', '=', $user->id)->first();
-    //     if ($data == null) {
-    //         //IF no interest Added
-    //         $genres = Genre::all();
-    //         $casts = Cast::all();
-    //         $languages = Language::all();
-    //         $pcompanys = ProductionCompany::all();
-    //         $directors = Director::all();
-    //         $countries = Country::all();
-    //         return view('profile.interest.interest', ['genres' => $genres, 'casts' => $casts, 'languages' => $languages, 'pcompanys' => $pcompanys, 'directors' => $directors, 'countries' => $countries, 'user' => $user]);
-    //     }
-    //     //
-    //     // cluster
-    //     $data = $this->data2DArrayAll();
-    //     // Number of clusters
-    //     $numberOfClusters = 10;
-
-    //     // Kmean for Language
-    //     $result = $this->KmeansControl($numberOfClusters, $data);
-    //     //
-    //     $data = [];
-    //     foreach ($result[0] as $r) {
-    //         $data[] = Movie::find($r);
-    //     }
-    //     shuffle($data);
-    //     return view('pages.recom3', ['data' => $data, 'time' => $result[1]]);
-    // }
-
     public function index()
     {
 
         $user = Auth::user();
         $data = Interest::all()->where('user_id', '=', $user->id)->first();
-        // if ($data == null) {
-        //     //IF no interest Added
-        //     $genres = Genre::all();
-        //     $casts = Cast::all();
-        //     $languages = Language::all();
-        //     $pcompanys = ProductionCompany::all();
-        //     $directors = Director::all();
-        //     $countries = Country::all();
-        //     return view('profile.interest.interest', ['genres' => $genres, 'casts' => $casts, 'languages' => $languages, 'pcompanys' => $pcompanys, 'directors' => $directors, 'countries' => $countries, 'user' => $user]);
-        // }
         if ($data == null) {
             return redirect()->route('user.dashboard')->with('error', 'Please add some interests to get recommendations.');
         }
-        // Data preparation
+        //
+        // cluster
         $data = $this->data2DArrayAll();
+        // Number of clusters
+        $numberOfClusters = 10;
 
-        // Filter out entries with null values to avoid issues during training
-        $filteredData = array_filter($data, function ($row) {
-            return !in_array(null, $row, true);
-        });
-
-        // Extract features (excluding the first column which is the movie ID)
-        $samples = array_map(function ($row) {
-            return array_slice($row, 1);
-        }, $filteredData);
-
-        // Measure time before clustering
-        $startTime = microtime(true);
-
-        // Implement K-Means clustering
-        $kmeans = new KMeans(10); // Correct usage without Euclidean
-        $clusters = $kmeans->cluster($samples);
-
-        // Measure time after clustering
-        $endTime = microtime(true);
-
-        // Calculate elapsed time
-        $elapsedTime = $endTime - $startTime;
-
-        // Collect movie IDs from clusters
-        $recommendedMovieIds = [];
-        foreach ($clusters as $cluster) {
-            foreach ($cluster as $sample) {
-                $index = array_search($sample, $samples);
-                if ($index !== false) {
-                    $recommendedMovieIds[] = $filteredData[$index][0];
-                }
-            }
+        // Kmean for Language
+        $result = $this->KmeansControl($numberOfClusters, $data);
+        //
+        $data = [];
+        foreach ($result[0] as $r) {
+            $data[] = Movie::find($r);
         }
-
-        // Ensure we recommend at least 10 unique movies
-        $recommendedMovieIds = array_unique($recommendedMovieIds);
-        $numRecommendations = 10;
-        if (count($recommendedMovieIds) < $numRecommendations) {
-            $additionalMovies = Movie::inRandomOrder()->take($numRecommendations - count($recommendedMovieIds))->pluck('id')->toArray();
-            $recommendedMovieIds = array_merge($recommendedMovieIds, $additionalMovies);
-        }
-
-        // Fetch movie details for recommendations
-        $recommendedMoviesDetails = [];
-        foreach ($recommendedMovieIds as $movieId) {
-            $movie = Movie::find($movieId);
-            if ($movie) {
-                $recommendedMoviesDetails[] = $movie;
-            }
-        }
-
-        // Shuffle the recommended movies (optional)
-        shuffle($recommendedMoviesDetails);
-
-        return view('pages.recom3', ['data' => $recommendedMoviesDetails, 'time' => $elapsedTime]);
+        shuffle($data);
+        return view('pages.recom3', ['data' => $data, 'time' => $result[1]]);
     }
+
+    // public function index()
+    // {
+
+    //     $user = Auth::user();
+    //     $data = Interest::all()->where('user_id', '=', $user->id)->first();
+    //     // if ($data == null) {
+    //     //     //IF no interest Added
+    //     //     $genres = Genre::all();
+    //     //     $casts = Cast::all();
+    //     //     $languages = Language::all();
+    //     //     $pcompanys = ProductionCompany::all();
+    //     //     $directors = Director::all();
+    //     //     $countries = Country::all();
+    //     //     return view('profile.interest.interest', ['genres' => $genres, 'casts' => $casts, 'languages' => $languages, 'pcompanys' => $pcompanys, 'directors' => $directors, 'countries' => $countries, 'user' => $user]);
+    //     // }
+    //     if ($data == null) {
+    //         return redirect()->route('user.dashboard')->with('error', 'Please add some interests to get recommendations.');
+    //     }
+    //     // Data preparation
+    //     $data = $this->data2DArrayAll();
+
+    //     // Filter out entries with null values to avoid issues during training
+    //     $filteredData = array_filter($data, function ($row) {
+    //         return !in_array(null, $row, true);
+    //     });
+
+    //     // Extract features (excluding the first column which is the movie ID)
+    //     $samples = array_map(function ($row) {
+    //         return array_slice($row, 1);
+    //     }, $filteredData);
+
+    //     // Measure time before clustering
+    //     $startTime = microtime(true);
+
+    //     // Implement K-Means clustering
+    //     $kmeans = new KMeans(10); // Correct usage without Euclidean
+    //     $clusters = $kmeans->cluster($samples);
+
+    //     // Measure time after clustering
+    //     $endTime = microtime(true);
+
+    //     // Calculate elapsed time
+    //     $elapsedTime = $endTime - $startTime;
+
+    //     // Collect movie IDs from clusters
+    //     $recommendedMovieIds = [];
+    //     foreach ($clusters as $cluster) {
+    //         foreach ($cluster as $sample) {
+    //             $index = array_search($sample, $samples);
+    //             if ($index !== false) {
+    //                 $recommendedMovieIds[] = $filteredData[$index][0];
+    //             }
+    //         }
+    //     }
+
+    //     // Ensure we recommend at least 10 unique movies
+    //     $recommendedMovieIds = array_unique($recommendedMovieIds);
+    //     $numRecommendations = 10;
+    //     if (count($recommendedMovieIds) < $numRecommendations) {
+    //         $additionalMovies = Movie::inRandomOrder()->take($numRecommendations - count($recommendedMovieIds))->pluck('id')->toArray();
+    //         $recommendedMovieIds = array_merge($recommendedMovieIds, $additionalMovies);
+    //     }
+
+    //     // Fetch movie details for recommendations
+    //     $recommendedMoviesDetails = [];
+    //     foreach ($recommendedMovieIds as $movieId) {
+    //         $movie = Movie::find($movieId);
+    //         if ($movie) {
+    //             $recommendedMoviesDetails[] = $movie;
+    //         }
+    //     }
+
+    //     // Shuffle the recommended movies (optional)
+    //     shuffle($recommendedMoviesDetails);
+
+    //     return view('pages.recom3', ['data' => $recommendedMoviesDetails, 'time' => $elapsedTime]);
+    // }
 
     //hybrid Recommender System
     public function hybridRecommendations()
