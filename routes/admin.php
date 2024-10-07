@@ -84,6 +84,7 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
     Route::post('movieLanguage', [MovieController::class, 'indexLanguage'])->name('movie.language');
     Route::post('movieCountry', [MovieController::class, 'indexCountry'])->name('movie.country');
     Route::post('moviePCompany', [MovieController::class, 'indexPCompany'])->name('movie.pcompany');
+    Route::get('movie/{id}/users', [HomeController::class, 'showUsers'])->name('movie.show1');
     Route::resource('movie', MovieController::class);
     //Movie Rating Update
     Route::get('movie/{id}/rating', [MovieController::class, 'rating'])->name('movie.rating');

@@ -164,7 +164,7 @@
                                 alt="{{ $d->title }}'s Photo"
                             />
                             </td> --}}
-                            <td>{{ $d->title }}</td>
+                            <td><a href="{{ route('movie.show', $d->id) }}">{{$d->title}}</td>
                             <td>
                                 @if (count($d->MovieGenre)>=1)
                                 @foreach ($d->MovieGenre as $MovieGenre)
@@ -232,7 +232,7 @@
                             @endif
                         </td>
                         <td class="text-center">
-                            <a href="{{ route('admin.movie.show',$d->id) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('admin.movie.show1',$d->id) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
                             <a href="{{ route('admin.movie.edit',$d->id) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
                             <a onclick="return confirm('Are You Sure?')" href="{{ url('admin/movie/'.$d->id.'/delete') }}" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></a>
                         </td>

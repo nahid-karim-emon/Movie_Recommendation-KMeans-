@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-
-
+use App\Models\Movie;
+use App\Models\WatchMovie;
 
 class UserController extends Controller
 {
@@ -67,8 +67,25 @@ class UserController extends Controller
     public function show(string $id)
     {
         //
-        $data = User::find($id);
-        return view('admin.user.show', ['data' => $data]);
+        $user = User::find($id);
+        //watch movie
+        $watch = WatchMovie::where('user_id', $id)->get();
+        //movie list that user watched
+        $data = [];
+        $genres = [];
+        $languages = [];
+        $countries = [];
+        $pcompanys = [];
+        //$rating = [];
+        foreach ($watch as $w) {
+            $data[] = Movie::find($w->movie_id);
+            $genres[] = Movie::find($w->movie_id)->genre;
+            $languages[] = Movie::find($w->movie_id)->language;
+            $countries[] = Movie::find($w->movie_id)->country;
+            $pcompanys[] = Movie::find($w->movie_id)->production_company;
+            //$rating[] = $w->rating;
+        }
+        return view('admin.user.show', ['user' => $user, 'data' => $data, 'genres' => $genres, 'languages' => $languages, 'countries' => $countries, 'pcompanys' => $pcompanys]);
     }
 
     /**

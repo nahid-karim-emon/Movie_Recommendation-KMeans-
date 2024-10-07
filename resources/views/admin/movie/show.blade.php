@@ -4,115 +4,70 @@
 
 
     <!-- Page Heading -->
-    <h1 class="h3 mb-2 text-gray-800"> Movie Details </h1>
+    <h1 class="h3 mb-2 text-gray-800"> List of Users Who Watched "{{ $movie->title }}" Movie</h1>
 
     <!-- DataTales Example -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Movie Details of <span class="bg-warning"> {{ $data->title }} </span> 
+            <h6 class="m-0 font-weight-bold text-primary">List of Users Who Watched "{{ $movie->title }}" Movie
             <a href="{{ route('admin.movie.index') }}" class="float-right btn btn-success btn-sm"> <i class="fa fa-arrow-left"></i> View All </a> </h6>
         </div>
         <div class="card-body">
-            
             <div class="table-responsive">
-                <table class="table table-bordered" width="100%">
-                    <tr>
-                        <th>Movie Poster</th>
-                        <td><img width="250px" src="{{$data->photo ? asset('storage/'.$data->photo) : asset('images/productioncompany.jpg')}}" alt="{{ $data->name }}'s Photo"></td>
-                    </tr>
-                    <tr>
-                        <th>Released Date</th>
-                            @php
-                                $date = \Illuminate\Support\Carbon::create($data->release);
-                                $formattedDate = $date->formatLocalized('%B %d, %Y');
-                            @endphp
-                        <td>{{ $formattedDate }}</td>
-                    </tr>
-                    <tr>
-                        <th>Title</th>
-                        <td>{{ $data->title }}</td>
-                    </tr>
-                    <tr>
-                        <th>Genre</th>
-                        <td>
-                            @foreach ($MovieGenredata as $MovieGenred)
-                           <span class="m-1 p-1 bg-secondary text-white"> {{ $MovieGenred->genre->title }} </span>  
-                            @endforeach
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Origin Country</th>
-                        <td>
-                            @foreach ($MovieCountryData as $MovieCountry)
-                           <span class="m-1 p-1 bg-secondary text-white"> {{ $MovieCountry->country->title }} </span>  
-                            @endforeach
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Cast</th>
-                        <td>
-                            @foreach ($MovieCastdata as $MovieCastd)
-                           <span class="m-1 p-1 bg-secondary text-white"> {{ $MovieCastd->cast->name }} </span>  
-                            @endforeach
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Director</th>
-                        <td>
-                            @foreach ($MovieDirectordata as $MovieDirector)
-                           <span class="m-1 p-1 bg-secondary text-white"> {{ $MovieDirector->director->name }} </span>  
-                            @endforeach
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Language</th>
-                        <td>
-                            @foreach ($MovieLanguagedata as $MovieLanguage)
-                           <span class="m-1 p-1 bg-secondary text-white"> {{ $MovieLanguage->language->title }} </span>  
-                            @endforeach
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Production Company</th>
-                        <td>
-                            @foreach ($MoviePcompanydata as $MoviePcompany)
-                           <span class="m-1 p-1 bg-secondary text-white"> {{ $MoviePcompany->pcompany->title }} </span>  
-                            @endforeach
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Movie Ratings</th>
-                        <td>
-                            @foreach ($MovieRatingData as $MovieRating)
-                            @switch($MovieRating->rating_id)
-                            @case(1)
-                                <div class="m-1 p-1 bg-info text-white"> IMDB RATING : {{ $MovieRating->ratings }} / 10 </div>  
-                                
-                                @break
-                            @case(2)
-                            <div class="m-1 p-1 bg-danger text-white"> Rotten Tommetoes RATING : {{ $MovieRating->ratings }} / 100 </div>  
-                                @break
-                            @case(3)
-                            <div class="m-1 p-1 bg-warning text-white"> Extra RATING : {{ $MovieRating->ratings }} / 5 </div>  
-                                @break
-                            @default
-                                
-                            @endswitch 
-                            @endforeach
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Info</th>
-                        <td>{{ $data->info }}</td>
-                    </tr>
-
-                    <tr>
-                        <td colspan="2">
-                            <a href="{{ route('admin.movie.rating',$data->id) }}" class="float-left btn btn-warning btn-sm m-1"><i class="fa fa-edit"> Change Rating of {{ $data->title }}  </i></a> <a href="{{ route('admin.movie.edit',$data->id) }}" class="float-right btn btn-info btn-sm"><i class="fa fa-edit"> Edit {{ $data->title }}  </i></a>
-                        </td>
-                        
-                    </tr>
-                    
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Nationality</th>
+                            <th>Educational Level</th>
+                            <th>Language</th>
+                            <th>Religion</th>
+                            <th>Marital Status</th>
+                            <th>Occupation</th>
+                            <th>Email</th>
+                            <th>Mobile</th>
+                            <th>Given Rating</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if($data)
+                        @foreach ($data as $key=> $d)
+                        <tr>
+                            <td>{{ ++$key }}</td>
+                            <td>{{ $d->name }}</td>
+                            <td>{{ $d->age }}</td>
+                            <td>{{ $d->gender }}</td>
+                            <td>{{ $d->nationality }}</td>
+                            <td>{{ $d->educational_level }}</td>
+                            <td>{{ $d->language }}</td>
+                            <td>{{ $d->religion }}</td>
+                            <td>{{ $d->maritial_status }}</td>
+                            <td>{{ $d->occupation }}</td>
+                            <td>{{ $d->email }}</td>
+                            <td>{{ $d->mobile }}</td>
+                            <td>
+                                @php
+                                $rating  = DB::table('watch_movies')->where('user_id',$d->id)->where('movie_id',$movie->id)->first();
+                                @endphp
+                                @if ($rating)
+                                {{ $rating->rating }}
+                                @else
+                                Not Rated Yet
+                                @endif
+                            </td>
+                            <td class="text-center">
+                                <a href="{{ route('admin.user.show',$d->id) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
+                                <a href="{{ route('admin.user.edit',$d->id) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                                <a onclick="return confirm('Are You Sure?')" href="{{ url('admin/user/'.$d->id.'/delete') }}" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        @endforeach
+                        @endif
+                    </tbody>
                 </table>
             </div>
         </div>

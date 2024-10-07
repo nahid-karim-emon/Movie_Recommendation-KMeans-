@@ -60,7 +60,7 @@
                         @foreach ($data as $key => $d)
                         <tr>
                             <td>{{ ++$i }}</td>
-                            <td>{{ $d->movie->title }}</td>
+                            <td><a href="{{ route('movie.show', $d->movie->id) }}">{{$d->movie->title}}</td>
                             <td>
                                 @foreach ($d->movie->MovieGenre as $MovieGenre)
                                 <span class="badge badge-secondary">{{ $MovieGenre->genre->title }}</span>
@@ -114,8 +114,8 @@
                                 @endforeach
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('admin.movie.show',$d->id) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
-                                <a href="{{ route('admin.movie.edit',$d->id) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                                <a href="{{ route('admin.movie.show1',$d->movie->id) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
+                                <a href="{{ route('admin.movie.edit',$d->movie->id) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
                                 <a onclick="return confirm('Are You Sure?')" href="{{ url('admin/movie/'.$d->id.'/delete') }}" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></a>
                             </td>
                         </tr>
