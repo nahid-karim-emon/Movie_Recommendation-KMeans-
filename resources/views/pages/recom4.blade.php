@@ -4,6 +4,176 @@
 <!-- End of Header -->
 
 <!-- Movies Section -->
+<section id="movies" class="p-3 pb-5">
+  <style>
+    .badge-secondary {
+      color: #333 !important;
+    }
+
+    #movies {
+      background-color: #F8F9FA;
+      font-family: 'Arial, sans-serif';
+    }
+
+    .line {
+      width: 50px;
+      height: 4px;
+      background-color: #6c757d;
+      margin: 10px auto 20px;
+    }
+
+    .table th {
+      background-color: #333;
+      color: #fff;
+    }
+
+    .table thead th {
+      vertical-align: middle;
+    }
+
+    .table td {
+      vertical-align: middle;
+    }
+
+    .badge {
+      margin: 0 2px;
+    }
+
+    /* Additional styling for better look */
+    .table-responsive {
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+      background: #fff;
+    }
+  </style>
+
+  <div class="container-xl">
+    <div class="row text-center">
+      <div class="col-md-12">
+        <h3 class="mb-0">Hybrid Recommendation</h3>
+        <hr class="line me-auto ms-auto">
+      </div>
+    </div>
+
+    <!-- Show Count Options -->
+    <div class="row mt-3 justify-content-center">
+      <div class="form-group mr-2">
+        <label for="movieCount">Show:</label>
+        <select id="movieCount" class="form-control ml-2">
+          <option value="all">All</option>
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+          <option value="25">25</option>
+          <option value="30">30</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Movie Table -->
+    <div class="row mt-4 justify-content-center">
+      <div class="table-responsive">
+        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+          <thead class="thead-dark">
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Genre</th>
+              <th>Language</th>
+              <th>Casts</th>
+              <th>Directors</th>
+              <th>Production Company</th>
+              <th>Country</th>
+              <th>Release Date</th>
+            </tr>
+          </thead>
+          <tbody id="movieTableBody">
+            @php $i = 0; @endphp
+            @foreach ($data as $key => $movie)
+              <tr class="movie-row">
+                <td>{{ ++$i }}</td>
+                <td><a href="{{ route('movie.show', $movie->id) }}">{{ $movie->title }}</a></td>
+                <td>
+                  @foreach ($movie->MovieGenre as $MovieGenre)
+                    <span class="badge badge-secondary">{{ $MovieGenre->genre->title }}</span>
+                  @endforeach
+                </td>
+                <td>
+                  @foreach ($movie->MovieLanguage as $MovieLanguage)
+                    <span class="badge badge-secondary">{{ $MovieLanguage->language->title }}</span>
+                  @endforeach
+                </td>
+                <td>
+                  @foreach ($movie->MovieCast as $MovieCast)
+                    <span class="badge badge-secondary">{{ $MovieCast->cast->name }}</span>
+                  @endforeach
+                </td>
+                <td>
+                  @foreach ($movie->MovieDirector as $MovieDirector)
+                    <span class="badge badge-secondary">{{ $MovieDirector->director->name }}</span>
+                  @endforeach
+                </td>
+                <td>
+                  @foreach ($movie->MoviePcompany as $MoviePcompany)
+                    <span class="badge badge-secondary">{{ $MoviePcompany->pcompany->title }}</span>
+                  @endforeach
+                </td>
+                <td>
+                  @foreach ($movie->MovieCountry as $MovieCountry)
+                    <span class="badge badge-secondary">{{ $MovieCountry->country->title }}</span>
+                  @endforeach
+                </td>
+                @php
+                  $date = \Illuminate\Support\Carbon::create($movie->release);
+                  $formattedDate = $date->formatLocalized('%B %d, %Y');
+                @endphp
+                <td>{{ $formattedDate }}</td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End Movies Section -->
+
+<!-- Footer -->
+@include('../layouts/homeFooter')
+<!-- End Footer -->
+
+<script>
+  // Function to display movie rows based on selected count
+  function displayMovies(count) {
+    const rows = document.querySelectorAll('.movie-row');
+    rows.forEach(function(row, index) {
+      if (count === 'all' || index < count) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  // Event listener for movie count selection
+  document.getElementById('movieCount').addEventListener('change', function() {
+    const selectedCount = this.value;
+    displayMovies(selectedCount);
+  });
+
+  // Initialize with default value of all movies displayed
+  document.getElementById('movieCount').dispatchEvent(new Event('change'));
+  
+</script>
+
+{{-- <!-- Header -->
+@section('title', 'Movie')
+@include('../layouts/homeHeader')
+<!-- End of Header -->
+
+<!-- Movies Section -->
 <section id="events" class="p-3 pb-5">
   <style>
     #events {
@@ -186,4 +356,4 @@
 <!-- Footer -->
 @include('../layouts/homeFooter')
 <!-- End Footer -->
-
+ --}}

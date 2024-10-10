@@ -617,8 +617,9 @@ class RecommendationController4 extends Controller
         //     }
         // }
         shuffle($recommendedMoviesDetails);
+        $time=0.0;
 
-        return view('pages.recom4', ['data' => $recommendedMoviesDetails]);
+        return view('pages.recom3', ['data' => $recommendedMoviesDetails, 'time' => $time]);
     }
 
     private function cosineSimilarity($vec1, $vec2)
