@@ -33,6 +33,7 @@ Route::resource('movie', MovieController::class);
 //User Routes
 // Route::get('user', [ProfileController::class, 'index'])->middleware(['auth'])->middleware(['auth', 'verified'])->name('user.dashboard');
 Route::get('user', [ProfileController::class, 'index'])->middleware(['auth'])->name('user.dashboard');
+Route::get('watch-movies', [ProfileController::class, 'view1'])->middleware(['auth'])->name('user.watch');
 // })->->name('dashboard');
 
 Route::middleware('auth')->prefix('user')->name('user.')->group(function () {

@@ -6,13 +6,16 @@ namespace App\Http\Controllers;
 use App\Models\Cast;
 use App\Models\User;
 use App\Models\Genre;
+use App\Models\Movie;
 use App\Models\Country;
 use App\Models\Director;
 use App\Models\Interest;
 use App\Models\Language;
 use Illuminate\View\View;
+use App\Models\WatchMovie;
 use App\Models\InterestCast;
 use Illuminate\Http\Request;
+use Phpml\Clustering\KMeans;
 use App\Models\InterestGenre;
 use App\Models\InterestRating;
 use App\Models\InterestCountry;
@@ -23,9 +26,8 @@ use App\Models\ProductionCompany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Redirect;
-use Phpml\Clustering\KMeans;
 use Phpml\Preprocessing\LabelEncoder;
+use Illuminate\Support\Facades\Redirect;
 
 class ProfileController extends Controller
 {
@@ -33,6 +35,30 @@ class ProfileController extends Controller
     public function index()
     {
         return view('profile.dashboard');
+    }
+    public function view1()
+    {
+        $user = Auth::user();
+        //dd($user);
+        //watch movie
+        $watch = WatchMovie::where('user_id', $user->id)->get();
+        //dd($watch);
+        //movie list that user watched
+        $data = [];
+        $genres = [];
+        $languages = [];
+        $countries = [];
+        $pcompanys = [];
+        //$rating = [];
+        foreach ($watch as $w) {
+            $data[] = Movie::find($w->movie_id);
+            $genres[] = Movie::find($w->movie_id)->genre;
+            $languages[] = Movie::find($w->movie_id)->language;
+            $countries[] = Movie::find($w->movie_id)->country;
+            $pcompanys[] = Movie::find($w->movie_id)->production_company;
+            //$rating[] = $w->rating;
+        }
+        return view('admin.user.watch', ['user' => $user, 'data' => $data, 'genres' => $genres, 'languages' => $languages, 'countries' => $countries, 'pcompanys' => $pcompanys]);
     }
     /**
      * Display the user's profile form.

@@ -70,7 +70,11 @@
             <span>My Interests</span></a>
     </li>
 
-
+    <li class="nav-item active">
+        <a class="nav-link" href="{{ route('user.watch') }}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Watch Movies</span></a>
+    </li>
    
     <!--Logout - Dashboard -->
     <hr class="sidebar-divider d-none d-md-block">
