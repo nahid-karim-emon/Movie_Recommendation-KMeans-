@@ -146,31 +146,29 @@ class ProfileController extends Controller
     {
         $defaultClusterCenters = [
             // Bangladesh
-            [25, crc32('male'), crc32('Bangladeshi'), crc32('BSc'), crc32('Bangla'), crc32('Muslim'), crc32('Single'), crc32('Engineer')],
-            [30, crc32('female'), crc32('Bangladeshi'), crc32('MSc'), crc32('Bangla'), crc32('Hindu'), crc32('Married'), crc32('Teacher')],
-            [35, crc32('male'), crc32('Bangladeshi'), crc32('PhD'), crc32('Bangla'), crc32('Buddhist'), crc32('Single'), crc32('Scientist')],
+            [25, crc32('Male'), crc32('Bangladeshi'), crc32('BSc'), crc32('Bangla'), crc32('Muslim'), crc32('Single'), crc32('Engineer')],
+            [30, crc32('Female'), crc32('Bangladeshi'), crc32('MSc'), crc32('Bangla'), crc32('Hindu'), crc32('Married'), crc32('Teacher')],
+            [35, crc32('Male'), crc32('Bangladeshi'), crc32('PhD'), crc32('Bangla'), crc32('Buddhist'), crc32('Single'), crc32('Scientist')],
             // India
-            [50, crc32('female'), crc32('Indian'), crc32('BSc'), crc32('Hindi'), crc32('Hindu'), crc32('Single'), crc32('Lawyer')],
-            [55, crc32('male'), crc32('Indian'), crc32('MSc'), crc32('English'), crc32('Muslim'), crc32('Married'), crc32('Engineer')],
-            [60, crc32('female'), crc32('Indian'), crc32('PhD'), crc32('Bengali'), crc32('Christian'), crc32('Widowed'), crc32('Teacher')],
+            [50, crc32('Female'), crc32('Indian'), crc32('BSc'), crc32('Hindi'), crc32('Hindu'), crc32('Single'), crc32('Lawyer')],
+            [55, crc32('Male'), crc32('Indian'), crc32('MSc'), crc32('English'), crc32('Muslim'), crc32('Married'), crc32('Engineer')],
+            [60, crc32('Female'), crc32('Indian'), crc32('PhD'), crc32('Bengali'), crc32('Christian'), crc32('Widowed'), crc32('Teacher')],
             // Pakistan
-            [65, crc32('male'), crc32('Pakistani'), crc32('BSc'), crc32('Urdu'), crc32('Muslim'), crc32('Single'), crc32('Scientist')],
-            [70, crc32('female'), crc32('Pakistani'), crc32('MSc'), crc32('Punjabi'), crc32('Muslim'), crc32('Widowed'), crc32('Nurse')],
+            [65, crc32('Male'), crc32('Pakistani'), crc32('BSc'), crc32('Urdu'), crc32('Muslim'), crc32('Single'), crc32('Scientist')],
+            [70, crc32('Female'), crc32('Pakistani'), crc32('MSc'), crc32('Punjabi'), crc32('Muslim'), crc32('Widowed'), crc32('Nurse')],
             // England
-            [80, crc32('female'), crc32('English'), crc32('BSc'), crc32('English'), crc32('Christian'), crc32('Single'), crc32('Lawyer')],
-            [85, crc32('male'), crc32('English'), crc32('MSc'), crc32('English'), crc32('Christian'), crc32('Divorced'), crc32('Doctor')],
+            [80, crc32('Female'), crc32('English'), crc32('BSc'), crc32('English'), crc32('Christian'), crc32('Single'), crc32('Lawyer')],
+            [85, crc32('Male'), crc32('English'), crc32('MSc'), crc32('English'), crc32('Christian'), crc32('Divorced'), crc32('Doctor')],
             // USA
-            [95, crc32('male'), crc32('American'), crc32('BSc'), crc32('English'), crc32('Christian'), crc32('Single'), crc32('Engineer')],
-            [100, crc32('female'), crc32('American'), crc32('MSc'), crc32('Spanish'), crc32('Christian'), crc32('Married'), crc32('Teacher')],
+            [95, crc32('Male'), crc32('American'), crc32('BSc'), crc32('English'), crc32('Christian'), crc32('Single'), crc32('Engineer')],
+            [100, crc32('Female'), crc32('American'), crc32('MSc'), crc32('Spanish'), crc32('Christian'), crc32('Married'), crc32('Teacher')],
             // China
-            [110, crc32('female'), crc32('Chinese'), crc32('BSc'), crc32('Chinese'), crc32('Buddhist'), crc32('Single'), crc32('Engineer')],
-            [115, crc32('male'), crc32('Chinese'), crc32('MSc'), crc32('Mandarin'), crc32('Atheist'), crc32('Married'), crc32('Doctor')],
-            [120, crc32('female'), crc32('Chinese'), crc32('PhD'), crc32('Cantonese'), crc32('Buddhist'), crc32('Divorced'), crc32('Teacher')],
+            [110, crc32('Female'), crc32('Chinese'), crc32('BSc'), crc32('Chinese'), crc32('Buddhist'), crc32('Single'), crc32('Engineer')],
+            [115, crc32('Male'), crc32('Chinese'), crc32('MSc'), crc32('Mandarin'), crc32('Atheist'), crc32('Married'), crc32('Doctor')],
+            [120, crc32('Female'), crc32('Chinese'), crc32('PhD'), crc32('Cantonese'), crc32('Buddhist'), crc32('Divorced'), crc32('Teacher')],
         ];
 
-
         // Convert user's categorical data using crc32
-        //dd($user->nationality);
         $userSample = [
             (float) $user->age,
             (float) crc32($user->gender),
@@ -183,35 +181,47 @@ class ProfileController extends Controller
         ];
 
         // Find the closest cluster
-        $closestClusterIndex = $this->findClosestCluster($userSample, $defaultClusterCenters);
+        $weights = [
+            'age' => 1.5,         // Assigning more weight to age
+            'gender' => 1.0,      // Assigning moderate weight to gender
+            'nationality' => 0.8, // Lower weight to nationality
+            'educational_level' => 1.2, // Higher importance for education
+            'language' => 0.7,    // Lesser weight for language
+            'religion' => 0.6,    // Less weight for religion
+            'marital_status' => 0.9, // Moderate weight for marital status
+            'occupation' => 1.3   // Assigning more importance to occupation
+        ];
 
-        //dd($closestClusterIndex, $userSample, $defaultClusterCenters);
+        $closestClusterIndex = $this->findClosestWeightedCluster($userSample, $defaultClusterCenters, $weights);
         return $closestClusterIndex;
     }
 
-    private function findClosestCluster(array $userSample, array $clusterCenters)
+    private function findClosestWeightedCluster(array $userSample, array $clusterCenters, array $weights)
     {
         $closestClusterIndex = 0;
         $closestDistance = PHP_FLOAT_MAX;
-
+        //dd($clusterCenters);
+        $tem = [];
         foreach ($clusterCenters as $index => $center) {
-            $distance = $this->euclideanDistance($userSample, $center);
-            //dd($distance);
+            $distance = $this->weightedEuclideanDistance($userSample, $center, $weights);
+            $tem[] = $distance;
             if ($distance < $closestDistance) {
                 $closestDistance = $distance;
                 $closestClusterIndex = $index;
             }
         }
-
-        return $closestClusterIndex;
+        //dd($tem);
+        return $closestClusterIndex + 1;
     }
 
-    private function euclideanDistance(array $point1, array $point2)
+    private function weightedEuclideanDistance(array $point1, array $point2, array $weights)
     {
         $sum = 0;
+        $keys = ['age', 'gender', 'nationality', 'educational_level', 'language', 'religion', 'marital_status', 'occupation'];
 
         for ($i = 0; $i < count($point1); $i++) {
-            $sum += pow($point1[$i] - $point2[$i], 2);
+            $weight = $weights[$keys[$i]] ?? 1; // Default weight of 1 if not specified
+            $sum += $weight * pow($point1[$i] - $point2[$i], 2);
         }
 
         return sqrt($sum);

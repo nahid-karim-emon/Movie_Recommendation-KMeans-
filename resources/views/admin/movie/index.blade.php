@@ -3,7 +3,14 @@
 
 @section('content')
 
-
+<style>
+    .movie-poster {
+        max-width: 80px;
+        height: auto;
+        border-radius: 5px;
+        object-fit: cover;
+    }
+    </style>
     <!-- Page Heading -->
     <h1 class="h3 mb-2 text-gray-800">Movies</h1>
             <!-- Session Messages Starts -->
@@ -141,6 +148,7 @@
                         <tr>
                             <th>#</th>
                             {{-- <th>Photo</th> --}}
+                            <th>Poster</th>
                             <th>Name</th>
                             <th>Genre</th>
                             <th>Language</th>
@@ -159,6 +167,9 @@
                         @foreach ($data as $key => $d)
                         <tr>
                             <td>{{ ++$i }}</td>
+                            <td>
+                                <img src="{{ $d->photo ? asset('storage/'.$d->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $d->title }}">
+                              </td>
                             {{-- <td><img width="150px" height="150px"
                                 src="{{$d->photo ? asset('storage/'.$d->photo) : asset('images/productioncompany.jpg')}}"
                                 alt="{{ $d->title }}'s Photo"

@@ -72,7 +72,7 @@ class HomeController extends Controller
         //
         $movie = Movie::find($id);
         $data = [];
-        $users = WatchMovie::where('movie_id', $id)->get();
+        $users = WatchMovie::where('movie_id', $id)->get()->unique('user_id');
         foreach ($users as $user) {
             $data[] = User::where('id', $user->user_id)->first();
         }

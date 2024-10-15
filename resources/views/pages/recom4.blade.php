@@ -8,6 +8,7 @@
   <style>
     .badge-secondary {
       color: #333 !important;
+      background-color: #E2E3E5 !important;
     }
 
     #movies {
@@ -16,51 +17,75 @@
     }
 
     .line {
-      width: 50px;
+      width: 60px;
       height: 4px;
       background-color: #6c757d;
       margin: 10px auto 20px;
     }
 
     .table th {
-      background-color: #333;
+      background-color: #343a40;
       color: #fff;
     }
 
     .table thead th {
       vertical-align: middle;
+      text-align: center;
     }
 
     .table td {
       vertical-align: middle;
+      text-align: center;
     }
 
     .badge {
       margin: 0 2px;
     }
 
-    /* Additional styling for better look */
+    /* Styling for responsive and professional look */
     .table-responsive {
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      border-radius: 5px;
-      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+      overflow: auto;
       background: #fff;
+      padding: 15px;
+    }
+
+    .movie-poster {
+      max-width: 80px;
+      height: auto;
+      border-radius: 5px;
+      object-fit: cover;
+    }
+
+    @media (max-width: 768px) {
+      .movie-poster {
+        max-width: 60px;
+      }
+
+      .table th, .table td {
+        font-size: 14px;
+      }
+
+      .badge {
+        font-size: 12px;
+      }
     }
   </style>
 
   <div class="container-xl">
     <div class="row text-center">
       <div class="col-md-12">
-        <h3 class="mb-0">Hybrid Recommendation</h3>
-        <hr class="line me-auto ms-auto">
+        <h3 class="mb-0">Hybrid Movie Recommendation</h3>
+        <hr class="line">
       </div>
     </div>
 
     <!-- Show Count Options -->
     <div class="row mt-3 justify-content-center">
-      <div class="form-group mr-2">
-        <label for="movieCount">Show:</label>
-        <select id="movieCount" class="form-control ml-2">
+      <div class="form-group mb-0 d-flex align-items-center">
+        <label for="movieCount" class="mr-2 mb-0">Show:</label>
+        <select id="movieCount" class="form-control" style="width: auto;">
           <option value="all">All</option>
           <option value="5">5</option>
           <option value="10">10</option>
@@ -71,14 +96,16 @@
         </select>
       </div>
     </div>
+    
 
     <!-- Movie Table -->
     <div class="row mt-4 justify-content-center">
       <div class="table-responsive">
-        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+        <table class="table table-bordered table-striped" id="dataTable" width="100%" cellspacing="0">
           <thead class="thead-dark">
             <tr>
               <th>#</th>
+              <th>Poster</th>
               <th>Name</th>
               <th>Genre</th>
               <th>Language</th>
@@ -94,6 +121,9 @@
             @foreach ($data as $key => $movie)
               <tr class="movie-row">
                 <td>{{ ++$i }}</td>
+                <td>
+                  <img src="{{ $movie->photo ? asset('storage/'.$movie->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movie->title }}">
+                </td>
                 <td><a href="{{ route('movie.show', $movie->id) }}">{{ $movie->title }}</a></td>
                 <td>
                   @foreach ($movie->MovieGenre as $MovieGenre)
@@ -165,8 +195,8 @@
 
   // Initialize with default value of all movies displayed
   document.getElementById('movieCount').dispatchEvent(new Event('change'));
-  
 </script>
+
 
 {{-- <!-- Header -->
 @section('title', 'Movie')

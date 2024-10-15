@@ -1,7 +1,14 @@
 @extends('admin/layout')
 @section('title', 'User Details')
 @section('content')
-
+<style>
+    .movie-poster {
+        max-width: 80px;
+        height: auto;
+        border-radius: 5px;
+        object-fit: cover;
+    }
+    </style>
 
     <!-- Page Heading -->
     <h1 class="h3 mb-2 text-gray-800"> User Watched Movie List </h1>
@@ -18,7 +25,7 @@
                     <thead class="thead-dark">
                         <tr>
                             <th>#</th>
-                            {{-- <th>Photo</th> --}}
+                            <th>Poster</th>
                             <th>Name</th>
                             <th>Genre</th>
                             <th>Language</th>
@@ -43,6 +50,9 @@
                                 alt="{{ $d->title }}'s Photo"
                             />
                             </td> --}}
+                            <td>
+                                <img src="{{ $d->photo ? asset('storage/'.$d->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $d->title }}">
+                              </td>
                             <td><a href="{{ route('movie.show', $d->id) }}">{{$d->title}}</td>
                             <td>
                                 @if (count($d->MovieGenre)>=1)

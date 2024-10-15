@@ -2,7 +2,14 @@
 @section('title', 'Movie | Admin Dashboard')
 
 @section('content')
-
+<style>
+    .movie-poster {
+        max-width: 80px;
+        height: auto;
+        border-radius: 5px;
+        object-fit: cover;
+    }
+    </style>
             <!-- Session Messages Starts -->
             @if(Session::has('success'))
             <div class="p-3 mb-2 bg-success text-white">
@@ -42,6 +49,7 @@
                     <thead class="thead-dark">
                         <tr>
                             <th>#</th>
+                            <th>Poster</th>
                             <th>Name</th>
                             <th>Genre</th>
                             <th>Language</th>
@@ -60,6 +68,9 @@
                         @foreach ($data as $key => $d)
                         <tr>
                             <td>{{ ++$i }}</td>
+                            <td>
+                                <img src="{{ $d->movie->photo ? asset('storage/'.$d->movie->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $d->movie->title }}">
+                              </td>
                             <td><a href="{{ route('movie.show', $d->movie->id) }}">{{$d->movie->title}}</td>
                             <td>
                                 @foreach ($d->movie->MovieGenre as $MovieGenre)

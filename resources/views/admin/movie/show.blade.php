@@ -2,7 +2,6 @@
 @section('title', 'Movie Details | Admin Dashboard')
 @section('content')
 
-
     <!-- Page Heading -->
     <h1 class="h3 mb-2 text-gray-800"> List of Users Who Watched "{{ $movie->title }}" Movie</h1>
 

@@ -569,7 +569,10 @@ class RecommendationController3 extends Controller
         $recommendedMoviesDetails = [];
         $allMovieIds = Movie::pluck('id')->toArray(); // Fetch all movie IDs for later use
 
-        // 1. Content-Based Recommendation
+        // 1. Fetch the list of movies the user has already watched
+        $watchedMovies = WatchMovie::where('user_id', $user->id)->pluck('movie_id')->toArray();
+
+        // 2. Content-Based Recommendation
         $cluster = Cluster::where('user_id', '=', $user->id)->first();
         if ($cluster) {
             $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)->where('user_id', '!=', $user->id)->get();
@@ -577,14 +580,14 @@ class RecommendationController3 extends Controller
                 $watch = WatchMovie::where('user_id', '=', $cluster_user->user_id)->get();
                 foreach ($watch as $w) {
                     $movie = Movie::find($w->movie_id);
-                    if ($movie) {
+                    if ($movie && !in_array($movie->id, $watchedMovies)) {
                         $recommendedMoviesDetails['content_based'][$movie->id] = $movie;
                     }
                 }
             }
         }
 
-        // 2. Collaborative Filtering
+        // 3. Collaborative Filtering
         $ratings = DB::table('watch_movies')
             ->select('user_id', 'movie_id', 'rating')
             ->get();
@@ -609,13 +612,13 @@ class RecommendationController3 extends Controller
             $watch = WatchMovie::where('user_id', '=', $top_id)->get();
             foreach ($watch as $w) {
                 $movie = Movie::find($w->movie_id);
-                if ($movie) {
+                if ($movie && !in_array($movie->id, $watchedMovies)) {
                     $recommendedMoviesDetails['collaborative'][$movie->id] = $movie;
                 }
             }
         }
 
-        // 3. Fallback to K-means if neither Content nor Collaborative Data is Available
+        // 4. Fallback to K-means if neither Content nor Collaborative Data is Available
         if (empty($recommendedMoviesDetails['content_based']) && empty($recommendedMoviesDetails['collaborative'])) {
             $interestData = Interest::all()->where('user_id', '=', $user->id)->first();
             if ($interestData) {
@@ -624,12 +627,20 @@ class RecommendationController3 extends Controller
                 $result = $this->KmeansControl($numberOfClusters, $data);
 
                 foreach ($result[0] as $movieId) {
-                    $recommendedMoviesDetails['kmeans'][$movieId] = Movie::find($movieId);
+                    if (!in_array($movieId, $watchedMovies)) {
+                        $recommendedMoviesDetails['kmeans'][$movieId] = Movie::find($movieId);
+                    }
                 }
             }
         }
 
-        // 4. Assign Weights and Prioritize Movies
+        // Build the movie graph from user ratings
+        $graph = $this->buildMovieGraph($ratings);
+
+        // Apply PageRank algorithm
+        $pageRankScores = $this->pageRank($graph);
+
+        // 5. Assign Weights and Prioritize Movies
         $finalRecommendations = [];
         $recommendedMovieIds = []; // Track recommended movies to avoid duplication
 
@@ -666,33 +677,83 @@ class RecommendationController3 extends Controller
         // Step 5: Fetch remaining movies not recommended by any method
         $remainingMovieIds = array_diff($allMovieIds, $recommendedMovieIds); // Get movies that were not recommended
         foreach ($remainingMovieIds as $movieId) {
-            $movie = Movie::find($movieId);
-            if ($movie) {
-                $movie->weighted_score = 0; // Assign a weight of 0 to non-recommended movies
-                $finalRecommendations[] = $movie;
+            if (!in_array($movieId, $watchedMovies)) {
+                $movie = Movie::find($movieId);
+                if ($movie) {
+                    $movie->weighted_score = 0; // Assign a weight of 0 to non-recommended movies
+                    $finalRecommendations[] = $movie;
+                }
             }
         }
 
-        // 6. Sort final recommendations by weighted score in descending order
+        // Step 6: Incorporate PageRank into the weighted score
+        foreach ($finalRecommendations as $movie) {
+            $movieId = $movie->id;
+            $pageRankScore = $pageRankScores[$movieId] ?? 0; // Fetch the PageRank score for the movie
+            $movie->weighted_score *= $pageRankScore; // Add PageRank score to the weighted score
+        }
+
+        // 7. Sort final recommendations by weighted score in descending order
         usort($finalRecommendations, function ($a, $b) {
             return $b->weighted_score <=> $a->weighted_score;
         });
 
-        // Get detailed movie information with all relationships
-
         if (empty($finalRecommendations)) {
             return redirect()->route('user.dashboard')->with('error', 'Sorry, no recommendations available.');
         }
-
 
         return view('pages.recom4', [
             'data' => $finalRecommendations
         ]);
     }
 
+    private function buildMovieGraph($ratings)
+    {
+        $graph = [];
+        foreach ($ratings as $rating) {
+            foreach ($ratings as $otherRating) {
+                if ($rating->movie_id != $otherRating->movie_id && $rating->user_id == $otherRating->user_id) {
+                    $graph[$rating->movie_id][$otherRating->movie_id] = 1; // Create an edge between movies
+                }
+            }
+        }
+        return $graph;
+    }
+
+    private function pageRank($graph, $d = 0.85, $maxIterations = 100, $tol = 0.0001)
+    {
+        $numMovies = count($graph);
+        $pageRank = array_fill_keys(array_keys($graph), 1 / $numMovies); // Initialize PageRank
+        $newPageRank = [];
+
+        for ($i = 0; $i < $maxIterations; $i++) {
+            foreach ($graph as $movieId => $edges) {
+                $newPageRank[$movieId] = (1 - $d) / $numMovies;
+                foreach ($edges as $outgoingMovieId => $weight) {
+                    $outgoingLinksCount = count($graph[$outgoingMovieId]);
+                    $newPageRank[$movieId] += $d * ($pageRank[$outgoingMovieId] / $outgoingLinksCount);
+                }
+            }
+
+            // Check for convergence
+            $diff = 0;
+            foreach ($pageRank as $movieId => $rank) {
+                $diff += abs($newPageRank[$movieId] - $rank);
+            }
+
+            if ($diff < $tol) {
+                break; // Converged
+            }
+
+            $pageRank = $newPageRank;
+        }
+
+        return $pageRank;
+    }
+
     private function weightedRecommendations($movies, $weight)
     {
-        // Weight the recommendations, in a real system, this would involve more sophisticated rating
+        // Weight the recommendations
         $weightedMovies = [];
         foreach ($movies as $movie) {
             $movie->weighted_score = ($movie->rating ?? 5) * $weight; // Example: rating-based or equal weight
@@ -709,18 +770,14 @@ class RecommendationController3 extends Controller
 
         foreach ($vec1 as $key => $value) {
             $dotProduct += $value * ($vec2[$key] ?? 0);
-            $normA += pow($value, 2);
+            $normA += $value * $value;
         }
 
         foreach ($vec2 as $value) {
-            $normB += pow($value, 2);
+            $normB += $value * $value;
         }
 
-        if ($normA == 0.0 || $normB == 0.0) {
-            return 0.0;
-        }
-
-        return $dotProduct / (sqrt($normA) * sqrt($normB));
+        return ($normA && $normB) ? ($dotProduct / (sqrt($normA) * sqrt($normB))) : 0.0;
     }
 
     public function KmeansControl($numberOfClusters, $data)
