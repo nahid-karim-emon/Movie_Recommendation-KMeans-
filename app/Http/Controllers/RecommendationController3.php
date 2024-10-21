@@ -572,6 +572,10 @@ class RecommendationController3 extends Controller
         // 1. Fetch the list of movies the user has already watched
         $watchedMovies = WatchMovie::where('user_id', $user->id)->pluck('movie_id')->toArray();
 
+        $watchedMovies1 = [];
+        for ($i = 0; $i < count($watchedMovies); $i++) {
+            $watchedMovies1[$i] = Movie::find($watchedMovies[$i]);
+        }
         // 2. Content-Based Recommendation
         $cluster = Cluster::where('user_id', '=', $user->id)->first();
         if ($cluster) {
@@ -616,23 +620,25 @@ class RecommendationController3 extends Controller
                     $recommendedMoviesDetails['collaborative'][$movie->id] = $movie;
                 }
             }
+            //dd($recommendedMoviesDetails['collaborative']);
         }
 
         // 4. Fallback to K-means if neither Content nor Collaborative Data is Available
-        if (empty($recommendedMoviesDetails['content_based']) && empty($recommendedMoviesDetails['collaborative'])) {
-            $interestData = Interest::all()->where('user_id', '=', $user->id)->first();
-            if ($interestData) {
-                $data = $this->data2DArrayAll(); // Get 2D array of movie features
-                $numberOfClusters = 10;
-                $result = $this->KmeansControl($numberOfClusters, $data);
+        // if (empty($recommendedMoviesDetails['content_based']) && empty($recommendedMoviesDetails['collaborative'])) {
+        $interestData = Interest::all()->where('user_id', '=', $user->id)->first();
+        if ($interestData) {
+            $data = $this->data2DArrayAll(); // Get 2D array of movie features
+            $numberOfClusters = 10;
+            $result = $this->KmeansControl($numberOfClusters, $data);
 
-                foreach ($result[0] as $movieId) {
-                    if (!in_array($movieId, $watchedMovies)) {
-                        $recommendedMoviesDetails['kmeans'][$movieId] = Movie::find($movieId);
-                    }
+            foreach ($result[0] as $movieId) {
+                if (!in_array($movieId, $watchedMovies)) {
+                    $recommendedMoviesDetails['kmeans'][$movieId] = Movie::find($movieId);
                 }
             }
         }
+        $interestMovies = $recommendedMoviesDetails['kmeans'] ?? [];
+        //}
 
         // Build the movie graph from user ratings
         $graph = $this->buildMovieGraph($ratings);
@@ -653,6 +659,7 @@ class RecommendationController3 extends Controller
 
         // Step 2: Movies in collaborative-only
         $collaborativeOnly = array_diff_key($recommendedMoviesDetails['collaborative'] ?? [], $bothCollaborativeAndContent);
+        //dd($collaborativeOnly);
         if (!empty($collaborativeOnly)) {
             $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($collaborativeOnly, 0.7));
             $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($collaborativeOnly));
@@ -665,12 +672,13 @@ class RecommendationController3 extends Controller
             $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($contentOnly));
         }
 
-        // Step 4: Movies from K-means clustering
-        if (!empty($recommendedMoviesDetails['kmeans'])) {
-            $kmeansMovies = array_diff_key($recommendedMoviesDetails['kmeans'], array_flip($recommendedMovieIds)); // Avoid overlapping
-            if (!empty($kmeansMovies)) {
-                $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($kmeansMovies, 0.3));
-                $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($kmeansMovies));
+        // Step 4: Fallback to User Interest
+        //dd($interestMovies);
+        if (!empty($interestMovies)) {
+            $interestMovies = array_diff_key($interestMovies, array_flip($recommendedMovieIds)); // Avoid overlap
+            if (!empty($interestMovies)) {
+                $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($interestMovies, 0.3));
+                $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($interestMovies));
             }
         }
 
@@ -686,6 +694,23 @@ class RecommendationController3 extends Controller
             }
         }
 
+        // Update recommendation type in final recommendations
+        foreach ($finalRecommendations as $movie) {
+            if (isset($recommendedMoviesDetails['content_based'][$movie->id]) && isset($recommendedMoviesDetails['collaborative'][$movie->id])) {
+                // New condition: if both content-based and collaborative match
+                $movie->recommendation_type = 'Content & Collaborative';
+            } elseif (isset($recommendedMoviesDetails['content_based'][$movie->id])) {
+                $movie->recommendation_type = 'Content-Based';
+            } elseif (isset($recommendedMoviesDetails['collaborative'][$movie->id])) {
+                $movie->recommendation_type = 'Collaborative';
+            } elseif (isset($interestMovies[$movie->id])) {
+                // User interest fallback
+                $movie->recommendation_type = 'User Interest';
+            } else {
+                $movie->recommendation_type = 'Other';
+            }
+        }
+
         // Step 6: Incorporate PageRank into the weighted score
         foreach ($finalRecommendations as $movie) {
             $movieId = $movie->id;
@@ -693,7 +718,7 @@ class RecommendationController3 extends Controller
             $movie->weighted_score *= $pageRankScore; // Add PageRank score to the weighted score
         }
 
-        // 7. Sort final recommendations by weighted score in descending order
+        // Step 7: Sort final recommendations by weighted score in descending order
         usort($finalRecommendations, function ($a, $b) {
             return $b->weighted_score <=> $a->weighted_score;
         });
@@ -703,7 +728,10 @@ class RecommendationController3 extends Controller
         }
 
         return view('pages.recom4', [
-            'data' => $finalRecommendations
+            'watchedMovies' => $watchedMovies1, // Pass the list of watched movies
+            'recommendedMovies' => $finalRecommendations, // Pass the final recommended movies
+            'recommendationTypes' => $recommendedMoviesDetails, // Pass recommendation type details
+            // 'recommendationDetailsLink' => route('recommendation.details', ['user_id' => $user->id]), // Add a link to Recommendation Details
         ]);
     }
 
@@ -740,11 +768,9 @@ class RecommendationController3 extends Controller
             foreach ($pageRank as $movieId => $rank) {
                 $diff += abs($newPageRank[$movieId] - $rank);
             }
-
             if ($diff < $tol) {
-                break; // Converged
+                break;
             }
-
             $pageRank = $newPageRank;
         }
 
@@ -753,13 +779,10 @@ class RecommendationController3 extends Controller
 
     private function weightedRecommendations($movies, $weight)
     {
-        // Weight the recommendations
-        $weightedMovies = [];
         foreach ($movies as $movie) {
-            $movie->weighted_score = ($movie->rating ?? 5) * $weight; // Example: rating-based or equal weight
-            $weightedMovies[] = $movie;
+            $movie->weighted_score = $weight; // Set the weight for the recommendations
         }
-        return $weightedMovies;
+        return $movies;
     }
 
     private function cosineSimilarity($vec1, $vec2)
@@ -778,6 +801,72 @@ class RecommendationController3 extends Controller
         }
 
         return ($normA && $normB) ? ($dotProduct / (sqrt($normA) * sqrt($normB))) : 0.0;
+    }
+
+    public function recommendationDetails()
+    {
+        $user = Auth::user();
+
+        // Fetch all movie ratings from the database
+        $ratings = DB::table('watch_movies')
+            ->select('user_id', 'movie_id', 'rating')
+            ->get();
+
+        // Build a rating matrix where keys are user IDs and values are their movie ratings
+        $ratingMatrix = [];
+        foreach ($ratings as $rating) {
+            $ratingMatrix[$rating->user_id][$rating->movie_id] = $rating->rating;
+        }
+
+        // Get the active user's ratings
+        $userRatings = $ratingMatrix[$user->id] ?? [];
+
+        // Calculate cosine similarity between the active user and other users
+        $similarity = [];
+        if (!empty($userRatings)) {
+            foreach ($ratingMatrix as $other_user_id => $other_user_ratings) {
+                if ($other_user_id != $user->id) {
+                    // Calculate cosine similarity for each user
+                    $similarity[$other_user_id] = $this->cosineSimilarity($userRatings, $other_user_ratings);
+                }
+            }
+
+            // Sort users by similarity in descending order (most similar first)
+            arsort($similarity);
+        }
+
+        // Get collaborative user information based on similarity
+        $collaborativeUsers = [];
+        foreach ($similarity as $collabUserId => $similarityScore) {
+            $collaborativeUsers[] = [
+                'user_id' => $collabUserId,
+                'similarity' => $similarityScore,
+                'ratings' => $ratingMatrix[$collabUserId]
+            ];
+        }
+
+        // Get content-based clustered users
+        $cluster = Cluster::where('user_id', '=', $user->id)->first();
+        $clusterUsers = [];
+        if ($cluster) {
+            $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)
+                ->where('user_id', '!=', $user->id)
+                ->get();
+
+            foreach ($cluster_users as $cluster_user) {
+                $clusterUsers[] = [
+                    'user_id' => $cluster_user->user_id,
+                    'watched_movies' => WatchMovie::where('user_id', $cluster_user->user_id)->pluck('movie_id')->toArray()
+                ];
+            }
+        }
+
+        return view('pages.recommendation_details', [
+            'cosineSimilarityMatrix' => $similarity, // Now it's the sorted similarity matrix
+            'collaborativeUsers' => $collaborativeUsers,
+            'clusterUsers' => $clusterUsers,
+            'userRatings' => $userRatings
+        ]);
     }
 
     public function KmeansControl($numberOfClusters, $data)

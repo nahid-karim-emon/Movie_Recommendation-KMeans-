@@ -144,8 +144,18 @@
             {{-- <li class="nav-item"><a class="nav-link" href="{{ route('admin.login') }}">Admin</a></li> --}}
             @endauth
             <li class="nav-item"><a class="nav-link @if(request()->is('contact')) active @endif" href="{{ route('root.contact') }}">Contact</a></li>
+        
             @auth
-            <li class="nav-item ms-3"><a class="nav-link button" href="{{ route('logout') }}">Logout</a></li>
+              @php
+              $user = Auth::user();
+              $firstName = explode(' ', $user->name)[0]; // Get the first part of the name
+              @endphp
+              <li class="nav-item ms-3">
+                  <a class="nav-link button" href="#">{{ $firstName }}</a>
+              </li>
+              <li class="nav-item ms-3">
+                  <a class="nav-link button" href="{{ route('logout') }}">Logout</a>
+              </li>
             @endauth
             @auth('admin')
             <li class="nav-item ms-3"><a class="nav-link button" href="{{ route('admin.logout') }}">Logout Admin</a></li>

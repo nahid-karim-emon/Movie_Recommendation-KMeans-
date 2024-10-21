@@ -34,6 +34,7 @@ Route::resource('movie', MovieController::class);
 // Route::get('user', [ProfileController::class, 'index'])->middleware(['auth'])->middleware(['auth', 'verified'])->name('user.dashboard');
 Route::get('user', [ProfileController::class, 'index'])->middleware(['auth'])->name('user.dashboard');
 Route::get('watch-movies', [ProfileController::class, 'view1'])->middleware(['auth'])->name('user.watch');
+Route::get('recommendationDet', [RecommendationController3::class, 'recommendationDetails'])->name('user.recommendationDetails');
 // })->->name('dashboard');
 
 Route::middleware('auth')->prefix('user')->name('user.')->group(function () {
@@ -41,7 +42,6 @@ Route::middleware('auth')->prefix('user')->name('user.')->group(function () {
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile/edit', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     //Support Routes
     Route::get('support/{id}/delete', [SupportController::class, 'destroy'])->name('support.destroy');
     Route::resource('support', SupportController::class);
