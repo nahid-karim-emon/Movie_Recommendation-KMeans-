@@ -849,8 +849,8 @@ class RecommendationController3 extends Controller
         }
 
         $userRatings = $ratingMatrix[$user->id] ?? [];
+        $similarity = [];
         if (!empty($userRatings)) {
-            $similarity = [];
             foreach ($ratingMatrix as $other_user_id => $other_user_ratings) {
                 if ($other_user_id != $user->id) {
                     $similarity[$other_user_id] = $this->cosineSimilarity($userRatings, $other_user_ratings);

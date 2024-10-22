@@ -20,22 +20,28 @@
                     <table class="table table-striped table-bordered">
                         <thead class="thead-dark">
                             <tr>
-                                <th>User ID</th>
+                                <th>#</th>
                                 <th>Name</th>
                                 <th>Cosine Similarity</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                                $i = 1;
+                            @endphp
                             @if (!empty($cosineSimilarityMatrix))
                                 @foreach($cosineSimilarityMatrix as $userId => $similarity)
                                     <tr>
                                         @php
                                             $user = App\Models\User::find($userId);
                                         @endphp
-                                        <td>{{ $userId }}</td>
+                                        <td>{{ $i }}</td>
                                         <td>{{$user->name}}</td>
                                         <td>{{ number_format($similarity, 4) }}</td>
                                     </tr>
+                                    @php
+                                        $i++;
+                                    @endphp
                                 @endforeach
                             @else
                                 <tr>
@@ -57,20 +63,26 @@
                     <table class="table table-striped table-bordered">
                         <thead class="thead-dark">
                             <tr>
-                                <th>Movie ID</th>
+                                <th>#</th>
                                 <th>Movie Title</th>
                                 <th>Movie Poster</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                                $i = 1;
+                            @endphp
                             @foreach($bothCollaborativeAndContent as $movieDetails)
                                     <tr>
-                                        <td>{{ $movieDetails->id }}</td>
+                                        <td>{{ $i }}</td>
                                         <td><a href="{{ route('movie.show', $movieDetails->id) }}">{{ $movieDetails->title }}</a></td>
                                         <td>
                                             <img src="{{ $movieDetails->photo ? asset('storage/'.$movieDetails->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movieDetails->title }}">
                                         </td>
                                     </tr>
+                                    @php
+                                        $i++;
+                                    @endphp
                             @endforeach
                         </tbody>
                     </table>
@@ -88,20 +100,26 @@
                     <table class="table table-striped table-bordered">
                         <thead class="thead-dark">
                             <tr>
-                                <th>Movie ID</th>
+                                <th>#</th>
                                 <th>Movie Title</th>
                                 <th>Movie Poster</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                                $i = 1;
+                            @endphp
                             @foreach($collaborativeUsers as $movieDetails)
                                     <tr>
-                                        <td>{{ $movieDetails->id }}</td>
+                                        <td>{{ $i }}</td>
                                         <td><a href="{{ route('movie.show', $movieDetails->id) }}">{{ $movieDetails->title }}</a></td>
                                         <td>
                                             <img src="{{ $movieDetails->photo ? asset('storage/'.$movieDetails->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movieDetails->title }}">
                                         </td>
                                     </tr>
+                                    @php
+                                        $i++;
+                                    @endphp
                             @endforeach
                         </tbody>
                     </table>
@@ -119,20 +137,26 @@
                     <table class="table table-striped table-bordered">
                         <thead class="thead-dark">
                             <tr>
-                                <th>Movie ID</th>
+                                <th>#</th>
                                 <th>Movie Title</th>
                                 <th>Movie Poster</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                                $i = 1;
+                            @endphp
                             @foreach($clusterUsers as $movieDetails)
                             <tr>
-                                <td>{{ $movieDetails->id }}</td>
+                                <td>{{ $i }}</td>
                                 <td><a href="{{ route('movie.show', $movieDetails->id) }}">{{ $movieDetails->title }}</a></td>
                                 <td>
                                     <img src="{{ $movieDetails->photo ? asset('storage/'.$movieDetails->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movieDetails->title }}">
                                 </td>
                             </tr>
+                            @php
+                                $i++;
+                            @endphp
                             @endforeach
                         </tbody>
                     </table>
@@ -150,20 +174,26 @@
                     <table class="table table-striped table-bordered">
                         <thead class="thead-dark">
                             <tr>
-                                <th>Movie ID</th>
+                                <th>#</th>
                                 <th>Movie Title</th>
                                 <th>Movie Poster</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                                $i = 1;
+                            @endphp
                             @foreach($interestedMovies as $movie)
                                     <tr>
-                                        <td>{{ $movie->id }}</td>
+                                        <td>{{ $i }}</td>
                                         <td><a href="{{ route('movie.show', $movie->id) }}">{{ $movie->title }}</a></td>
                                         <td>
                                             <img src="{{ $movie->photo ? asset('storage/'.$movie->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movie->title }}">
                                         </td>
                                     </tr>
+                                    @php
+                                        $i++;
+                                    @endphp
                             @endforeach
                         </tbody>
                     </table>
