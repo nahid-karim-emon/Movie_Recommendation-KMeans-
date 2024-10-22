@@ -31,6 +31,7 @@ use App\Models\InterestPcompany;
 use App\Models\ProductionCompany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Unique;
 
 class RecommendationController3 extends Controller
 {
@@ -806,66 +807,99 @@ class RecommendationController3 extends Controller
     public function recommendationDetails()
     {
         $user = Auth::user();
+        $genres = Genre::all();
+        $casts = Cast::all();
+        $languages = Language::all();
+        $pcompanys = ProductionCompany::all();
+        $directors = Director::all();
+        $countries = Country::all();
+        $recommendedMoviesDetails = [];
+        $allMovieIds = Movie::pluck('id')->toArray(); // Fetch all movie IDs for later use
 
-        // Fetch all movie ratings from the database
+        // 1. Fetch the list of movies the user has already watched
+        $watchedMovies = WatchMovie::where('user_id', $user->id)->pluck('movie_id')->toArray();
+
+        $watchedMovies1 = [];
+        for ($i = 0; $i < count($watchedMovies); $i++) {
+            $watchedMovies1[$i] = Movie::find($watchedMovies[$i]);
+        }
+        // 2. Content-Based Recommendation
+        $cluster = Cluster::where('user_id', '=', $user->id)->first();
+        if ($cluster) {
+            $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)->where('user_id', '!=', $user->id)->get();
+            foreach ($cluster_users as $cluster_user) {
+                $watch = WatchMovie::where('user_id', '=', $cluster_user->user_id)->get();
+                foreach ($watch as $w) {
+                    $movie = Movie::find($w->movie_id);
+                    if ($movie && !in_array($movie->id, $watchedMovies)) {
+                        $recommendedMoviesDetails['content_based'][$movie->id] = $movie;
+                    }
+                }
+            }
+        }
+
+        // 3. Collaborative Filtering
         $ratings = DB::table('watch_movies')
             ->select('user_id', 'movie_id', 'rating')
             ->get();
 
-        // Build a rating matrix where keys are user IDs and values are their movie ratings
         $ratingMatrix = [];
         foreach ($ratings as $rating) {
             $ratingMatrix[$rating->user_id][$rating->movie_id] = $rating->rating;
         }
 
-        // Get the active user's ratings
         $userRatings = $ratingMatrix[$user->id] ?? [];
-
-        // Calculate cosine similarity between the active user and other users
-        $similarity = [];
         if (!empty($userRatings)) {
+            $similarity = [];
             foreach ($ratingMatrix as $other_user_id => $other_user_ratings) {
                 if ($other_user_id != $user->id) {
-                    // Calculate cosine similarity for each user
                     $similarity[$other_user_id] = $this->cosineSimilarity($userRatings, $other_user_ratings);
                 }
             }
 
-            // Sort users by similarity in descending order (most similar first)
             arsort($similarity);
+            $topUsers = array_keys(array_slice($similarity, 0, 1, true));
+            $top_id = $topUsers[0];
+            $watch = WatchMovie::where('user_id', '=', $top_id)->get();
+            foreach ($watch as $w) {
+                $movie = Movie::find($w->movie_id);
+                if ($movie && !in_array($movie->id, $watchedMovies)) {
+                    $recommendedMoviesDetails['collaborative'][$movie->id] = $movie;
+                }
+            }
+            //dd($recommendedMoviesDetails['collaborative']);
         }
 
-        // Get collaborative user information based on similarity
-        $collaborativeUsers = [];
-        foreach ($similarity as $collabUserId => $similarityScore) {
-            $collaborativeUsers[] = [
-                'user_id' => $collabUserId,
-                'similarity' => $similarityScore,
-                'ratings' => $ratingMatrix[$collabUserId]
-            ];
-        }
+        // 4. Fallback to K-means if neither Content nor Collaborative Data is Available
+        // if (empty($recommendedMoviesDetails['content_based']) && empty($recommendedMoviesDetails['collaborative'])) {
+        $interestData = Interest::all()->where('user_id', '=', $user->id)->first();
+        if ($interestData) {
+            $data = $this->data2DArrayAll(); // Get 2D array of movie features
+            $numberOfClusters = 10;
+            $result = $this->KmeansControl($numberOfClusters, $data);
 
-        // Get content-based clustered users
-        $cluster = Cluster::where('user_id', '=', $user->id)->first();
-        $clusterUsers = [];
-        if ($cluster) {
-            $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)
-                ->where('user_id', '!=', $user->id)
-                ->get();
-
-            foreach ($cluster_users as $cluster_user) {
-                $clusterUsers[] = [
-                    'user_id' => $cluster_user->user_id,
-                    'watched_movies' => WatchMovie::where('user_id', $cluster_user->user_id)->pluck('movie_id')->toArray()
-                ];
+            foreach ($result[0] as $movieId) {
+                if (!in_array($movieId, $watchedMovies)) {
+                    $recommendedMoviesDetails['kmeans'][$movieId] = Movie::find($movieId);
+                }
             }
         }
+        $interestedMovies = $recommendedMoviesDetails['kmeans'] ?? [];
+        $collaborativeUsers = $recommendedMoviesDetails['collaborative'] ?? [];
+        $clusterUsers = $recommendedMoviesDetails['content_based'] ?? [];
+        $bothCollaborativeAndContent = array_intersect_key($collaborativeUsers, $clusterUsers);
+        $interestedMovies = $recommendedMoviesDetails['kmeans'] ?? [];
+        $interestedMovies = array_diff_key($interestedMovies, $bothCollaborativeAndContent);
+        $interestedMovies = array_diff_key($interestedMovies, $collaborativeUsers);
+        $interestedMovies = array_diff_key($interestedMovies, $clusterUsers);
+        //dd($bothCollaborativeAndContent);
 
         return view('pages.recommendation_details', [
-            'cosineSimilarityMatrix' => $similarity, // Now it's the sorted similarity matrix
+            'cosineSimilarityMatrix' => $similarity,
+            'bothCollaborativeAndContent' => $bothCollaborativeAndContent,
             'collaborativeUsers' => $collaborativeUsers,
             'clusterUsers' => $clusterUsers,
-            'userRatings' => $userRatings
+            'interestedMovies' => $interestedMovies,
         ]);
     }
 

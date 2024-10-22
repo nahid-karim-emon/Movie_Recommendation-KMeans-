@@ -72,13 +72,13 @@
     }
 
     .sticky-watched {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 60px;
-  z-index: 1;
-  max-height: 100vh;
-  overflow-y: auto; 
-}
+    position: -webkit-sticky;
+    position: sticky;
+    top: 60px;
+    z-index: 1;
+    max-height: 100vh;
+    overflow-y: auto; 
+  }
 
     /* .movie-tables .table-responsive {
       width: 48%;
@@ -184,7 +184,7 @@
                   <th>#</th>
                   <th>Poster</th>
                   <th>Name</th>
-                  <th>Recommendation Type</th>
+                  {{-- <th>Recommendation Type</th> --}}
                   <th>Genre</th>
                   <th>Language</th>
                   <th>Casts</th>
@@ -203,7 +203,7 @@
                       <img src="{{ $movie->photo ? asset('storage/'.$movie->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movie->title }}">
                     </td>
                     <td><a href="{{ route('movie.show', $movie->id) }}">{{ $movie->title }}</a></td>
-                    <td>{{ $movie->recommendation_type }}</td>
+                    {{-- <td>{{ $movie->recommendation_type }}</td> --}}
                     <td>
                       @foreach ($movie->MovieGenre as $genre)
                         <span class="badge badge-secondary">{{ $genre->genre->title }}</span>
