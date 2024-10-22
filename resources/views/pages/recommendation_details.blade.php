@@ -128,8 +128,11 @@
       margin: 10px auto 20px;
     }
     .card-header {
-        background-color: #007bff;
+        background-color: #000000;
+        text-align: center;
+        font-size: 32px !important;
         color: white;
+        padding: 20px 0;
     }
     .thead-dark th {
         background-color: #343a40;
