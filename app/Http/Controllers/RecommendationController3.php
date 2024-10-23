@@ -578,19 +578,19 @@ class RecommendationController3 extends Controller
             $watchedMovies1[$i] = Movie::find($watchedMovies[$i]);
         }
         // 2. Content-Based Recommendation
-        $cluster = Cluster::where('user_id', '=', $user->id)->first();
-        if ($cluster) {
-            $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)->where('user_id', '!=', $user->id)->get();
-            foreach ($cluster_users as $cluster_user) {
-                $watch = WatchMovie::where('user_id', '=', $cluster_user->user_id)->get();
-                foreach ($watch as $w) {
-                    $movie = Movie::find($w->movie_id);
-                    if ($movie && !in_array($movie->id, $watchedMovies)) {
-                        $recommendedMoviesDetails['content_based'][$movie->id] = $movie;
-                    }
+        $interestData = Interest::all()->where('user_id', '=', $user->id)->first();
+        if ($interestData) {
+            $data = $this->data2DArrayAll(); // Get 2D array of movie features
+            $numberOfClusters = 10;
+            $result = $this->KmeansControl($numberOfClusters, $data);
+
+            foreach ($result[0] as $movieId) {
+                if (!in_array($movieId, $watchedMovies)) {
+                    $recommendedMoviesDetails['content_based'][$movieId] = Movie::find($movieId);
                 }
             }
         }
+        $interestMovies = $recommendedMoviesDetails['content_based'] ?? [];
 
         // 3. Collaborative Filtering
         $ratings = DB::table('watch_movies')
@@ -624,21 +624,21 @@ class RecommendationController3 extends Controller
             //dd($recommendedMoviesDetails['collaborative']);
         }
 
-        // 4. Fallback to K-means if neither Content nor Collaborative Data is Available
+        // 4. demographic information
         // if (empty($recommendedMoviesDetails['content_based']) && empty($recommendedMoviesDetails['collaborative'])) {
-        $interestData = Interest::all()->where('user_id', '=', $user->id)->first();
-        if ($interestData) {
-            $data = $this->data2DArrayAll(); // Get 2D array of movie features
-            $numberOfClusters = 10;
-            $result = $this->KmeansControl($numberOfClusters, $data);
-
-            foreach ($result[0] as $movieId) {
-                if (!in_array($movieId, $watchedMovies)) {
-                    $recommendedMoviesDetails['kmeans'][$movieId] = Movie::find($movieId);
+        $cluster = Cluster::where('user_id', '=', $user->id)->first();
+        if ($cluster) {
+            $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)->where('user_id', '!=', $user->id)->get();
+            foreach ($cluster_users as $cluster_user) {
+                $watch = WatchMovie::where('user_id', '=', $cluster_user->user_id)->get();
+                foreach ($watch as $w) {
+                    $movie = Movie::find($w->movie_id);
+                    if ($movie && !in_array($movie->id, $watchedMovies)) {
+                        $recommendedMoviesDetails['demographic'][$movie->id] = $movie;
+                    }
                 }
             }
         }
-        $interestMovies = $recommendedMoviesDetails['kmeans'] ?? [];
         //}
 
         // Build the movie graph from user ratings
@@ -662,24 +662,24 @@ class RecommendationController3 extends Controller
         $collaborativeOnly = array_diff_key($recommendedMoviesDetails['collaborative'] ?? [], $bothCollaborativeAndContent);
         //dd($collaborativeOnly);
         if (!empty($collaborativeOnly)) {
-            $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($collaborativeOnly, 0.7));
+            $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($collaborativeOnly, 0.5));
             $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($collaborativeOnly));
         }
 
         // Step 3: Movies in content-based-only
         $contentOnly = array_diff_key($recommendedMoviesDetails['content_based'] ?? [], $bothCollaborativeAndContent);
         if (!empty($contentOnly)) {
-            $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($contentOnly, 0.5));
+            $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($contentOnly, 0.8));
             $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($contentOnly));
         }
 
         // Step 4: Fallback to User Interest
         //dd($interestMovies);
-        if (!empty($interestMovies)) {
-            $interestMovies = array_diff_key($interestMovies, array_flip($recommendedMovieIds)); // Avoid overlap
+        if (!empty($recommendedMoviesDetails['demographic'])) {
+            $cluster1 = array_diff_key($recommendedMoviesDetails['demographic'], array_flip($recommendedMovieIds)); // Avoid overlap
             if (!empty($interestMovies)) {
-                $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($interestMovies, 0.3));
-                $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($interestMovies));
+                $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($cluster1, 0.3));
+                $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($cluster1));
             }
         }
 
@@ -824,16 +824,14 @@ class RecommendationController3 extends Controller
             $watchedMovies1[$i] = Movie::find($watchedMovies[$i]);
         }
         // 2. Content-Based Recommendation
-        $cluster = Cluster::where('user_id', '=', $user->id)->first();
-        if ($cluster) {
-            $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)->where('user_id', '!=', $user->id)->get();
-            foreach ($cluster_users as $cluster_user) {
-                $watch = WatchMovie::where('user_id', '=', $cluster_user->user_id)->get();
-                foreach ($watch as $w) {
-                    $movie = Movie::find($w->movie_id);
-                    if ($movie && !in_array($movie->id, $watchedMovies)) {
-                        $recommendedMoviesDetails['content_based'][$movie->id] = $movie;
-                    }
+        $interestData = Interest::all()->where('user_id', '=', $user->id)->first();
+        if ($interestData) {
+            $data = $this->data2DArrayAll(); // Get 2D array of movie features
+            $numberOfClusters = 10;
+            $result = $this->KmeansControl($numberOfClusters, $data);
+            foreach ($result[0] as $movieId) {
+                if (!in_array($movieId, $watchedMovies)) {
+                    $recommendedMoviesDetails['content_based'][$movieId] = Movie::find($movieId);
                 }
             }
         }
@@ -870,25 +868,26 @@ class RecommendationController3 extends Controller
             //dd($recommendedMoviesDetails['collaborative']);
         }
 
-        // 4. Fallback to K-means if neither Content nor Collaborative Data is Available
+        // 4. Demographic Information
         // if (empty($recommendedMoviesDetails['content_based']) && empty($recommendedMoviesDetails['collaborative'])) {
-        $interestData = Interest::all()->where('user_id', '=', $user->id)->first();
-        if ($interestData) {
-            $data = $this->data2DArrayAll(); // Get 2D array of movie features
-            $numberOfClusters = 10;
-            $result = $this->KmeansControl($numberOfClusters, $data);
-
-            foreach ($result[0] as $movieId) {
-                if (!in_array($movieId, $watchedMovies)) {
-                    $recommendedMoviesDetails['kmeans'][$movieId] = Movie::find($movieId);
+        $cluster = Cluster::where('user_id', '=', $user->id)->first();
+        if ($cluster) {
+            $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)->where('user_id', '!=', $user->id)->get();
+            foreach ($cluster_users as $cluster_user) {
+                $watch = WatchMovie::where('user_id', '=', $cluster_user->user_id)->get();
+                foreach ($watch as $w) {
+                    $movie = Movie::find($w->movie_id);
+                    if ($movie && !in_array($movie->id, $watchedMovies)) {
+                        $recommendedMoviesDetails['demographic'][$movie->id] = $movie;
+                    }
                 }
             }
         }
-        $interestedMovies = $recommendedMoviesDetails['kmeans'] ?? [];
+
         $collaborativeUsers = $recommendedMoviesDetails['collaborative'] ?? [];
         $clusterUsers = $recommendedMoviesDetails['content_based'] ?? [];
         $bothCollaborativeAndContent = array_intersect_key($collaborativeUsers, $clusterUsers);
-        $interestedMovies = $recommendedMoviesDetails['kmeans'] ?? [];
+        $interestedMovies = $recommendedMoviesDetails['demographic'] ?? [];
         $interestedMovies = array_diff_key($interestedMovies, $bothCollaborativeAndContent);
         $interestedMovies = array_diff_key($interestedMovies, $collaborativeUsers);
         $interestedMovies = array_diff_key($interestedMovies, $clusterUsers);
