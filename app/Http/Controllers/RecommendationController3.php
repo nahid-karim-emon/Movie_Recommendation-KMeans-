@@ -912,6 +912,7 @@ class RecommendationController3 extends Controller
         }
         //$flag
         $flag = 0;
+        $movie = 0;
         //
         $numbers = 0;
         $numbers2 = 0;
