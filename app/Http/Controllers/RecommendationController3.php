@@ -860,19 +860,24 @@ class RecommendationController3 extends Controller
         $pageRankScores = $this->pageRank($graph);
         foreach ($movies as $movie) {
             $pageRankScore = $pageRankScores[$movie->id] ?? 0;
-            if ($pageRankScore == 0) {
-                //random value between 0.01 and 0.03
-                if ($movie->weighted_score == 1) {
-                    $pageRankScore = 0.9998;
-                } else if ($movie->weighted_score == 0.8) {
-                    $pageRankScore = 0.9996;
-                } else if ($movie->weighted_score == 0.5) {
-                    $pageRankScore = 0.9994;
-                } else if ($movie->weighted_score == 0.3) {
-                    $pageRankScore = 0.9992;
-                }
-                $pageRankScores[$movie->id] = $pageRankScore;
+            //random value between 0.01 and 0.03
+            if ($movie->weighted_score == 1) {
+                $tem = mt_rand(90, 99) / 1000;
+                $pageRankScore = $tem;
             }
+            if ($pageRankScore == 0) {
+                if ($movie->weighted_score == 0.8) {
+                    $tem = mt_rand(80, 89) / 1000;
+                    $pageRankScore = $tem;
+                } else if ($movie->weighted_score == 0.5) {
+                    $tem = mt_rand(70, 79) / 1000;
+                    $pageRankScore = $tem;
+                } else if ($movie->weighted_score == 0.3) {
+                    $tem = mt_rand(60, 69) / 1000;
+                    $pageRankScore = $tem;
+                }
+            }
+            $pageRankScores[$movie->id] = $pageRankScore;
             $movie->weighted_score *= $pageRankScore;
         }
     }
@@ -909,29 +914,22 @@ class RecommendationController3 extends Controller
 
         // Find movies recommended by both collaborative and content-based methods
         $bothCollaborativeAndContent = array_intersect_key($collaborativeUsers, $contentBasedUsers);
-
-        // Make sure the combined results are unique
         $bothCollaborativeAndContent = $this->uniqueMovies($bothCollaborativeAndContent);
 
         // Refine the demographic recommendations by excluding overlaps
         $interestedMovies = array_diff_key($demographicUsers, $bothCollaborativeAndContent, $collaborativeUsers, $contentBasedUsers);
-
-        // Ensure unique movies in interestedMovies
         $interestedMovies = $this->uniqueMovies($interestedMovies);
 
         // Calculate initial weighted scores for movies
         $initialWeightedScores = $this->calculateWeightedScores($recommendedMoviesDetails);
-
-        // Make sure the initial weighted scores are unique
         $initialWeightedScores = $this->uniqueMovies($initialWeightedScores);
 
         // Calculate PageRank scores for movies
-        $pageRankScores = $this->calculatePageRank($recommendedMoviesDetails);
+        $movieGraph = $this->buildMovieGraph();  // Generate the movie graph
+        $pageRankScores = $this->pageRank($movieGraph);
 
         // Adjust weights by applying PageRank
         $finalWeightedScores = $this->applyPageRankToWeights($initialWeightedScores, $pageRankScores);
-
-        // Ensure final weighted scores are unique
         $finalWeightedScores = $this->uniqueMovies($finalWeightedScores);
 
         return view('pages.recommendation_details', [
@@ -965,19 +963,24 @@ class RecommendationController3 extends Controller
     {
         foreach ($initialWeightedScores as $movieId => $movie) {
             $pageRankScore = $pageRankScores[$movieId] ?? 0;
-            if ($pageRankScore == 0) {
-                //random value between 0.015 and 0.021
-                if ($movie->weighted_score == 1) {
-                    $pageRankScore = 0.9998;
-                } else if ($movie->weighted_score == 0.8) {
-                    $pageRankScore = 0.9996;
-                } else if ($movie->weighted_score == 0.5) {
-                    $pageRankScore = 0.9994;
-                } else if ($movie->weighted_score == 0.3) {
-                    $pageRankScore = 0.9992;
-                }
-                $pageRankScores[$movieId] = $pageRankScore;
+            //random value between 0.015 and 0.021
+            if ($movie->weighted_score == 1) {
+                $tem = mt_rand(90, 99) / 1000;
+                $pageRankScore = $tem;
             }
+            if ($pageRankScore == 0) {
+                if ($movie->weighted_score == 0.8) {
+                    $tem = mt_rand(80, 89) / 1000;
+                    $pageRankScore = $tem;
+                } else if ($movie->weighted_score == 0.5) {
+                    $tem = mt_rand(70, 79) / 1000;
+                    $pageRankScore = $tem;
+                } else if ($movie->weighted_score == 0.3) {
+                    $tem = mt_rand(60, 69) / 1000;
+                    $pageRankScore = $tem;
+                }
+            }
+            $pageRankScores[$movieId] = $pageRankScore;
             $movie->final_weighted_score = $movie->weighted_score * $pageRankScore; // Apply PageRank
         }
 
