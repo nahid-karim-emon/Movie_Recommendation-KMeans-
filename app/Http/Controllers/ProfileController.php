@@ -145,15 +145,15 @@ class ProfileController extends Controller
     {
         $defaultClusterCenters = [
             // Bangladesh
-            [25, crc32('Male'), crc32('Bangladeshi'), crc32('BSc'), crc32('Bangla'), crc32('Muslim'), crc32('Single'), crc32('Engineer')],
+            [25, crc32('Male'), crc32('Bangladeshi'), crc32('BSc'), crc32('Bangla'), crc32('Islam'), crc32('Single'), crc32('Engineer')],
             [30, crc32('Female'), crc32('Bangladeshi'), crc32('MSc'), crc32('Bangla'), crc32('Hindu'), crc32('Married'), crc32('Teacher')],
             [35, crc32('Male'), crc32('Bangladeshi'), crc32('PhD'), crc32('Bangla'), crc32('Buddhist'), crc32('Single'), crc32('Scientist')],
             // India
             [50, crc32('Female'), crc32('Indian'), crc32('BSc'), crc32('Hindi'), crc32('Hindu'), crc32('Single'), crc32('Lawyer')],
-            [55, crc32('Male'), crc32('Indian'), crc32('MSc'), crc32('English'), crc32('Muslim'), crc32('Married'), crc32('Engineer')],
+            [55, crc32('Male'), crc32('Indian'), crc32('MSc'), crc32('English'), crc32('Islam'), crc32('Married'), crc32('Engineer')],
             [60, crc32('Female'), crc32('Indian'), crc32('PhD'), crc32('Bengali'), crc32('Christian'), crc32('Widowed'), crc32('Teacher')],
             // Pakistan
-            [65, crc32('Male'), crc32('Pakistani'), crc32('BSc'), crc32('Urdu'), crc32('Muslim'), crc32('Single'), crc32('Scientist')],
+            [65, crc32('Male'), crc32('Pakistani'), crc32('BSc'), crc32('Urdu'), crc32('Islam'), crc32('Single'), crc32('Scientist')],
             [70, crc32('Female'), crc32('Pakistani'), crc32('MSc'), crc32('Punjabi'), crc32('Muslim'), crc32('Widowed'), crc32('Nurse')],
             // England
             [80, crc32('Female'), crc32('English'), crc32('BSc'), crc32('English'), crc32('Christian'), crc32('Single'), crc32('Lawyer')],
@@ -181,14 +181,14 @@ class ProfileController extends Controller
 
         // Find the closest cluster
         $weights = [
-            'age' => 1.5,         // Assigning more weight to age
+            'age' => 0.5,         // Assigning more weight to age
             'gender' => 1.0,      // Assigning moderate weight to gender
-            'nationality' => 0.8, // Lower weight to nationality
-            'educational_level' => 1.2, // Higher importance for education
-            'language' => 0.7,    // Lesser weight for language
+            'nationality' => 0.1, // Lower weight to nationality
+            'educational_level' => 0.2, // Higher importance for education
+            'language' => 0.1,    // Lesser weight for language
             'religion' => 0.6,    // Less weight for religion
             'marital_status' => 0.9, // Moderate weight for marital status
-            'occupation' => 1.3   // Assigning more importance to occupation
+            'occupation' => 0.3   // Assigning more importance to occupation
         ];
 
         $closestClusterIndex = $this->findClosestWeightedCluster($userSample, $defaultClusterCenters, $weights);
@@ -200,7 +200,7 @@ class ProfileController extends Controller
         $closestClusterIndex = 0;
         $closestDistance = PHP_FLOAT_MAX;
         //dd($clusterCenters);
-        $tem = [];
+        //$tem = [];
         foreach ($clusterCenters as $index => $center) {
             $distance = $this->weightedEuclideanDistance($userSample, $center, $weights);
             $tem[] = $distance;
@@ -217,16 +217,13 @@ class ProfileController extends Controller
     {
         $sum = 0;
         $keys = ['age', 'gender', 'nationality', 'educational_level', 'language', 'religion', 'marital_status', 'occupation'];
-
         for ($i = 0; $i < count($point1); $i++) {
             $weight = $weights[$keys[$i]] ?? 1; // Default weight of 1 if not specified
-            $sum += $weight * pow($point1[$i] - $point2[$i], 2);
+            $sum += pow($point1[$i] - $point2[$i], 2);
         }
 
         return sqrt($sum);
     }
-
-
 
     public function update(Request $request)
     {

@@ -21,31 +21,25 @@
                         <thead class="thead-dark">
                             <tr>
                                 <th>#</th>
-                                <th>Name</th>
+                                <th>User Name</th>
                                 <th>Cosine Similarity</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $i = 1;
-                            @endphp
+                            @php $i = 1; @endphp
                             @if (!empty($cosineSimilarityMatrix))
                                 @foreach($cosineSimilarityMatrix as $userId => $similarity)
+                                    @php $user = App\Models\User::find($userId); @endphp
                                     <tr>
-                                        @php
-                                            $user = App\Models\User::find($userId);
-                                        @endphp
                                         <td>{{ $i }}</td>
-                                        <td>{{$user->name}}</td>
+                                        <td>{{ $user->name }}</td>
                                         <td>{{ number_format($similarity, 4) }}</td>
                                     </tr>
-                                    @php
-                                        $i++;
-                                    @endphp
+                                    @php $i++; @endphp
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="2" class="text-center">No data available</td>
+                                    <td colspan="3" class="text-center">No data available</td>
                                 </tr>
                             @endif
                         </tbody>
@@ -53,10 +47,53 @@
                 </div>
             </div>
         </div>
-        <!-- Both Collaborative and Content Movies Section -->
+
+        <!-- Combined Score Table: Initial Weights, PageRank, and Final Weights -->
         <div class="card mb-4">
             <div class="card-header">
-                <h2 class="h5 mb-0">Movies Recommended by Both Collaborative and Content Methods</h2>
+                <h2 class="h5 mb-0">Movie Scores Overview</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Movie Title</th>
+                                <th>Initial Weighted Score</th>
+                                <th>PageRank Score</th>
+                                <th>Final Weighted Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $i = 1; @endphp
+                            @if (!empty($finalWeightedScores))
+                                @foreach($finalWeightedScores as $movie)
+                                    <tr>
+                                        <td>{{ $i }}</td>
+                                        <td><a href="{{ route('movie.show', $movie->id) }}">{{ $movie->title }}</a></td>
+                                        <td>{{ number_format($movie->weighted_score, 4) }}</td>
+                                        <td>{{ number_format($pageRankScores[$movie->id] ?? 0, 4) }}</td>
+                                        <td>{{ number_format($movie->final_weighted_score ?? 0, 4) }}</td>
+                                    </tr>
+                                    @php $i++; @endphp
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="5" class="text-center">No movie scores available</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Movies Recommended by Both Collaborative and Content-Based Methods -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Movies Recommended by Both Collaborative and Content-Based Methods</h2>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -69,20 +106,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $i = 1;
-                            @endphp
-                            @foreach($bothCollaborativeAndContent as $movieDetails)
-                                    <tr>
-                                        <td>{{ $i }}</td>
-                                        <td><a href="{{ route('movie.show', $movieDetails->id) }}">{{ $movieDetails->title }}</a></td>
-                                        <td>
-                                            <img src="{{ $movieDetails->photo ? asset('storage/'.$movieDetails->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movieDetails->title }}">
-                                        </td>
-                                    </tr>
-                                    @php
-                                        $i++;
-                                    @endphp
+                            @php $i = 1; @endphp
+                            @foreach($bothCollaborativeAndContent as $movie)
+                                <tr>
+                                    <td>{{ $i }}</td>
+                                    <td><a href="{{ route('movie.show', $movie->id) }}">{{ $movie->title }}</a></td>
+                                    <td>
+                                        <img src="{{ $movie->photo ? asset('storage/'.$movie->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movie->title }}">
+                                    </td>
+                                </tr>
+                                @php $i++; @endphp
                             @endforeach
                         </tbody>
                     </table>
@@ -106,20 +139,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $i = 1;
-                            @endphp
-                            @foreach($collaborativeUsers as $movieDetails)
-                                    <tr>
-                                        <td>{{ $i }}</td>
-                                        <td><a href="{{ route('movie.show', $movieDetails->id) }}">{{ $movieDetails->title }}</a></td>
-                                        <td>
-                                            <img src="{{ $movieDetails->photo ? asset('storage/'.$movieDetails->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movieDetails->title }}">
-                                        </td>
-                                    </tr>
-                                    @php
-                                        $i++;
-                                    @endphp
+                            @php $i = 1; @endphp
+                            @foreach($collaborativeUsers as $movie)
+                                <tr>
+                                    <td>{{ $i }}</td>
+                                    <td><a href="{{ route('movie.show', $movie->id) }}">{{ $movie->title }}</a></td>
+                                    <td>
+                                        <img src="{{ $movie->photo ? asset('storage/'.$movie->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movie->title }}">
+                                    </td>
+                                </tr>
+                                @php $i++; @endphp
                             @endforeach
                         </tbody>
                     </table>
@@ -143,20 +172,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $i = 1;
-                            @endphp
-                            @foreach($clusterUsers as $movieDetails)
-                            <tr>
-                                <td>{{ $i }}</td>
-                                <td><a href="{{ route('movie.show', $movieDetails->id) }}">{{ $movieDetails->title }}</a></td>
-                                <td>
-                                    <img src="{{ $movieDetails->photo ? asset('storage/'.$movieDetails->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movieDetails->title }}">
-                                </td>
-                            </tr>
-                            @php
-                                $i++;
-                            @endphp
+                            @php $i = 1; @endphp
+                            @foreach($contentBasedUsers as $movie)
+                                <tr>
+                                    <td>{{ $i }}</td>
+                                    <td><a href="{{ route('movie.show', $movie->id) }}">{{ $movie->title }}</a></td>
+                                    <td>
+                                        <img src="{{ $movie->photo ? asset('storage/'.$movie->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movie->title }}">
+                                    </td>
+                                </tr>
+                                @php $i++; @endphp
                             @endforeach
                         </tbody>
                     </table>
@@ -180,20 +205,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $i = 1;
-                            @endphp
+                            @php $i = 1; @endphp
                             @foreach($interestedMovies as $movie)
-                                    <tr>
-                                        <td>{{ $i }}</td>
-                                        <td><a href="{{ route('movie.show', $movie->id) }}">{{ $movie->title }}</a></td>
-                                        <td>
-                                            <img src="{{ $movie->photo ? asset('storage/'.$movie->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movie->title }}">
-                                        </td>
-                                    </tr>
-                                    @php
-                                        $i++;
-                                    @endphp
+                                <tr>
+                                    <td>{{ $i }}</td>
+                                    <td><a href="{{ route('movie.show', $movie->id) }}">{{ $movie->title }}</a></td>
+                                    <td>
+                                        <img src="{{ $movie->photo ? asset('storage/'.$movie->photo) : asset('images/default_poster.jpg') }}" class="movie-poster" alt="{{ $movie->title }}">
+                                    </td>
+                                </tr>
+                                @php $i++; @endphp
                             @endforeach
                         </tbody>
                     </table>
@@ -218,7 +239,7 @@
     .card-header {
         background-color: #000000;
         text-align: center;
-        font-size: 24px; /* Reduced font size for better readability */
+        font-size: 24px;
         color: white;
         padding: 20px 0;
     }
@@ -233,6 +254,6 @@
         max-width: 60px;
     }
     img {
-        border-radius: 5px; /* Optional: for better appearance */
+        border-radius: 5px;
     }
 </style>

@@ -561,188 +561,265 @@ class RecommendationController3 extends Controller
     public function hybridRecommendations()
     {
         $user = Auth::user();
-        $genres = Genre::all();
-        $casts = Cast::all();
-        $languages = Language::all();
-        $pcompanys = ProductionCompany::all();
-        $directors = Director::all();
-        $countries = Country::all();
-        $recommendedMoviesDetails = [];
-        $allMovieIds = Movie::pluck('id')->toArray(); // Fetch all movie IDs for later use
-
-        // 1. Fetch the list of movies the user has already watched
         $watchedMovies = WatchMovie::where('user_id', $user->id)->pluck('movie_id')->toArray();
+        $recommendedMoviesDetails = $this->getRecommendations($user, $watchedMovies);
 
-        $watchedMovies1 = [];
-        for ($i = 0; $i < count($watchedMovies); $i++) {
-            $watchedMovies1[$i] = Movie::find($watchedMovies[$i]);
-        }
-        // 2. Content-Based Recommendation
-        $interestData = Interest::all()->where('user_id', '=', $user->id)->first();
-        if ($interestData) {
-            $data = $this->data2DArrayAll(); // Get 2D array of movie features
-            $numberOfClusters = 10;
-            $result = $this->KmeansControl($numberOfClusters, $data);
+        // Prioritize and sort recommendations
+        $finalRecommendations = $this->prioritizeRecommendations($recommendedMoviesDetails, $watchedMovies);
 
-            foreach ($result[0] as $movieId) {
-                if (!in_array($movieId, $watchedMovies)) {
-                    $recommendedMoviesDetails['content_based'][$movieId] = Movie::find($movieId);
-                }
-            }
-        }
-        $interestMovies = $recommendedMoviesDetails['content_based'] ?? [];
-
-        // 3. Collaborative Filtering
-        $ratings = DB::table('watch_movies')
-            ->select('user_id', 'movie_id', 'rating')
-            ->get();
-
-        $ratingMatrix = [];
-        foreach ($ratings as $rating) {
-            $ratingMatrix[$rating->user_id][$rating->movie_id] = $rating->rating;
-        }
-
-        $userRatings = $ratingMatrix[$user->id] ?? [];
-        if (!empty($userRatings)) {
-            $similarity = [];
-            foreach ($ratingMatrix as $other_user_id => $other_user_ratings) {
-                if ($other_user_id != $user->id) {
-                    $similarity[$other_user_id] = $this->cosineSimilarity($userRatings, $other_user_ratings);
-                }
-            }
-
-            arsort($similarity);
-            $topUsers = array_keys(array_slice($similarity, 0, 1, true));
-            $top_id = $topUsers[0];
-            $watch = WatchMovie::where('user_id', '=', $top_id)->get();
-            foreach ($watch as $w) {
-                $movie = Movie::find($w->movie_id);
-                if ($movie && !in_array($movie->id, $watchedMovies)) {
-                    $recommendedMoviesDetails['collaborative'][$movie->id] = $movie;
-                }
-            }
-            //dd($recommendedMoviesDetails['collaborative']);
-        }
-
-        // 4. demographic information
-        // if (empty($recommendedMoviesDetails['content_based']) && empty($recommendedMoviesDetails['collaborative'])) {
-        $cluster = Cluster::where('user_id', '=', $user->id)->first();
-        if ($cluster) {
-            $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)->where('user_id', '!=', $user->id)->get();
-            foreach ($cluster_users as $cluster_user) {
-                $watch = WatchMovie::where('user_id', '=', $cluster_user->user_id)->get();
-                foreach ($watch as $w) {
-                    $movie = Movie::find($w->movie_id);
-                    if ($movie && !in_array($movie->id, $watchedMovies)) {
-                        $recommendedMoviesDetails['demographic'][$movie->id] = $movie;
-                    }
-                }
-            }
-        }
-        //}
-
-        // Build the movie graph from user ratings
-        $graph = $this->buildMovieGraph($ratings);
-
-        // Apply PageRank algorithm
-        $pageRankScores = $this->pageRank($graph);
-
-        // 5. Assign Weights and Prioritize Movies
-        $finalRecommendations = [];
-        $recommendedMovieIds = []; // Track recommended movies to avoid duplication
-
-        // Step 1: Movies in both collaborative and content-based recommendations
-        $bothCollaborativeAndContent = array_intersect_key($recommendedMoviesDetails['collaborative'] ?? [], $recommendedMoviesDetails['content_based'] ?? []);
-        if (!empty($bothCollaborativeAndContent)) {
-            $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($bothCollaborativeAndContent, 1.0));
-            $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($bothCollaborativeAndContent));
-        }
-
-        // Step 2: Movies in collaborative-only
-        $collaborativeOnly = array_diff_key($recommendedMoviesDetails['collaborative'] ?? [], $bothCollaborativeAndContent);
-        //dd($collaborativeOnly);
-        if (!empty($collaborativeOnly)) {
-            $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($collaborativeOnly, 0.5));
-            $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($collaborativeOnly));
-        }
-
-        // Step 3: Movies in content-based-only
-        $contentOnly = array_diff_key($recommendedMoviesDetails['content_based'] ?? [], $bothCollaborativeAndContent);
-        if (!empty($contentOnly)) {
-            $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($contentOnly, 0.8));
-            $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($contentOnly));
-        }
-
-        // Step 4: Fallback to User Interest
-        //dd($interestMovies);
-        if (!empty($recommendedMoviesDetails['demographic'])) {
-            $cluster1 = array_diff_key($recommendedMoviesDetails['demographic'], array_flip($recommendedMovieIds)); // Avoid overlap
-            if (!empty($interestMovies)) {
-                $finalRecommendations = array_merge($finalRecommendations, $this->weightedRecommendations($cluster1, 0.3));
-                $recommendedMovieIds = array_merge($recommendedMovieIds, array_keys($cluster1));
-            }
-        }
-
-        // Step 5: Fetch remaining movies not recommended by any method
-        $remainingMovieIds = array_diff($allMovieIds, $recommendedMovieIds); // Get movies that were not recommended
+        // Fetch remaining movies not recommended by any method
+        $remainingMovieIds = array_diff(Movie::pluck('id')->toArray(), array_keys($finalRecommendations));
         foreach ($remainingMovieIds as $movieId) {
             if (!in_array($movieId, $watchedMovies)) {
                 $movie = Movie::find($movieId);
                 if ($movie) {
-                    $movie->weighted_score = 0; // Assign a weight of 0 to non-recommended movies
-                    $finalRecommendations[] = $movie;
+                    $movie->weighted_score = 0; // Assign weight 0 to non-recommended movies
+                    $finalRecommendations[$movieId] = $movie;
                 }
             }
         }
 
-        // Update recommendation type in final recommendations
-        foreach ($finalRecommendations as $movie) {
-            if (isset($recommendedMoviesDetails['content_based'][$movie->id]) && isset($recommendedMoviesDetails['collaborative'][$movie->id])) {
-                // New condition: if both content-based and collaborative match
-                $movie->recommendation_type = 'Content & Collaborative';
-            } elseif (isset($recommendedMoviesDetails['content_based'][$movie->id])) {
-                $movie->recommendation_type = 'Content-Based';
-            } elseif (isset($recommendedMoviesDetails['collaborative'][$movie->id])) {
-                $movie->recommendation_type = 'Collaborative';
-            } elseif (isset($interestMovies[$movie->id])) {
-                // User interest fallback
-                $movie->recommendation_type = 'User Interest';
-            } else {
-                $movie->recommendation_type = 'Other';
-            }
-        }
+        // Apply PageRank to adjust scores
+        $this->applyPageRank($finalRecommendations, $this->buildMovieGraph());
 
-        // Step 6: Incorporate PageRank into the weighted score
-        foreach ($finalRecommendations as $movie) {
-            $movieId = $movie->id;
-            $pageRankScore = $pageRankScores[$movieId] ?? 0; // Fetch the PageRank score for the movie
-            $movie->weighted_score *= $pageRankScore; // Add PageRank score to the weighted score
-        }
-
-        // Step 7: Sort final recommendations by weighted score in descending order
-        usort($finalRecommendations, function ($a, $b) {
-            return $b->weighted_score <=> $a->weighted_score;
-        });
+        // Sort recommendations by weighted score in descending order
+        uasort($finalRecommendations, fn($a, $b) => $b->weighted_score <=> $a->weighted_score);
 
         if (empty($finalRecommendations)) {
             return redirect()->route('user.dashboard')->with('error', 'Sorry, no recommendations available.');
         }
 
         return view('pages.recom4', [
-            'watchedMovies' => $watchedMovies1, // Pass the list of watched movies
-            'recommendedMovies' => $finalRecommendations, // Pass the final recommended movies
-            'recommendationTypes' => $recommendedMoviesDetails, // Pass recommendation type details
-            // 'recommendationDetailsLink' => route('recommendation.details', ['user_id' => $user->id]), // Add a link to Recommendation Details
+            'watchedMovies' => Movie::findMany($watchedMovies), // Fetch watched movies
+            'recommendedMovies' => $finalRecommendations,
+            'recommendationTypes' => $recommendedMoviesDetails,
         ]);
     }
 
-    private function buildMovieGraph($ratings)
+    private function getRecommendations($user, $watchedMovies)
     {
+        $recommendedMoviesDetails = [];
+
+        // Content-Based Recommendation
+        $contentBasedMovies = $this->contentBasedRecommendations($user, $watchedMovies);
+        $recommendedMoviesDetails['content_based'] = $contentBasedMovies;
+
+        // Collaborative Filtering
+        $collaborativeMovies = $this->collaborativeFilteringRecommendations($user, $watchedMovies);
+        $recommendedMoviesDetails['collaborative'] = $collaborativeMovies;
+
+        // Demographic Recommendations
+        $demographicMovies = $this->demographicRecommendations($user, $watchedMovies);
+        $recommendedMoviesDetails['demographic'] = $demographicMovies;
+
+        return $recommendedMoviesDetails;
+    }
+
+    private function contentBasedRecommendations($user, $watchedMovies)
+    {
+        // Get user's interest data
+        $interestData = Interest::where('user_id', $user->id)->first();
+        if (!$interestData) {
+            return [];
+        }
+
+        // Get 2D array of movie features
+        $data = $this->data2DArrayAll();
+
+        // Dynamic number of clusters based on data size
+        $numClusters = min(15, max(5, intdiv(count($data), 10))); // Adjust clusters based on dataset size
+
+        // Perform K-Means clustering
+        $clusters = $this->KmeansControl($numClusters, $data);
+
+        $recommendedMovies = [];
+
+        // Gather movies from clusters
+        foreach ($clusters[0] as $movieId) {
+            if (!in_array($movieId, $watchedMovies)) {
+                $recommendedMovies[$movieId] = Movie::find($movieId);
+            }
+        }
+
+        // Add more similar movies based on additional criteria
+        $similarMovies = $this->getAdditionalSimilarMovies($recommendedMovies, $watchedMovies);
+
+        // Merge additional similar movies with initial recommendations
+        $recommendedMovies = array_merge($recommendedMovies, $similarMovies);
+
+        // Limit the number of recommendations to avoid excessive results
+        $recommendedMovies = array_slice($recommendedMovies, 0, 50, true);
+        //unique
+        //$recommendedMovies = array_unique($recommendedMovies, SORT_REGULAR);
+
+        return $recommendedMovies;
+    }
+
+    private function getAdditionalSimilarMovies($recommendedMovies, $watchedMovies)
+    {
+        $similarMovies = [];
+        $moviesWithSimilarGenres = collect();
+        $moviesWithSimilarCasts = collect();
+        $moviesWithSimilarDirectors = collect();
+        $moviesWithSimilarCountries = collect();
+        $moviesWithSimilarLanguages = collect();
+        $moviesWithSimilarPcompanies = collect();
+
+        // Loop through each recommended movie to find similar movies
+        foreach ($recommendedMovies as $movie) {
+            if ($movie) {
+                // Get movies with similar casts
+                $moviesWithSimilarCasts = Movie::whereHas('MovieCast', function ($query) use ($movie) {
+                    $query->whereIn('cast_id', $movie->MovieCast->pluck('cast_id'));
+                })->whereNotIn('id', array_merge([$movie->id], $watchedMovies))->limit(5)->get();
+
+                // Get movies with similar directors
+                $moviesWithSimilarDirectors = Movie::whereHas('MovieDirector', function ($query) use ($movie) {
+                    $query->whereIn('director_id', $movie->MovieDirector->pluck('director_id'));
+                })->whereNotIn('id', array_merge([$movie->id], $watchedMovies))->limit(5)->get();
+
+                // Get movies with similar countries
+                $moviesWithSimilarCountries = Movie::whereHas('MovieCountry', function ($query) use ($movie) {
+                    $query->whereIn('country_id', $movie->MovieCountry->pluck('country_id'));
+                })->whereNotIn('id', array_merge([$movie->id], $watchedMovies))->limit(5)->get();
+
+                // Get movies with similar languages
+                $moviesWithSimilarLanguages = Movie::whereHas('MovieLanguage', function ($query) use ($movie) {
+                    $query->whereIn('language_id', $movie->MovieLanguage->pluck('language_id'));
+                })->whereNotIn('id', array_merge([$movie->id], $watchedMovies))->limit(5)->get();
+
+                // Get movies with similar production companies
+                $moviesWithSimilarPcompanies = Movie::whereHas('MoviePcompany', function ($query) use ($movie) {
+                    $query->whereIn('pcompany_id', $movie->MoviePcompany->pluck('pcompany_id'));
+                })->whereNotIn('id', array_merge([$movie->id], $watchedMovies))->limit(5)->get();
+
+                // Merge all similar movies
+                $allSimilarMovies = $moviesWithSimilarGenres
+                    ->merge($moviesWithSimilarCasts)
+                    ->merge($moviesWithSimilarDirectors)
+                    ->merge($moviesWithSimilarCountries)
+                    ->merge($moviesWithSimilarLanguages)
+                    ->merge($moviesWithSimilarPcompanies);
+
+                // Add similar movies to recommendations
+                foreach ($allSimilarMovies as $similarMovie) {
+                    $similarMovies[$similarMovie->id] = $similarMovie;
+                }
+            }
+        }
+
+        return $similarMovies;
+    }
+
+    private function collaborativeFilteringRecommendations($user, $watchedMovies)
+    {
+        $ratings = DB::table('watch_movies')->select('user_id', 'movie_id', 'rating')->get();
+        $ratingMatrix = $this->createRatingMatrix($ratings);
+        $userRatings = $ratingMatrix[$user->id] ?? [];
+
+        if (empty($userRatings)) {
+            return [];
+        }
+
+        $similarityScores = $this->calculateSimilarities($userRatings, $ratingMatrix);
+        $topUsers = array_keys(array_slice($similarityScores, 0, 1, true));
+
+        $recommendedMovies = [];
+        foreach ($topUsers as $topUserId) {
+            $watchedMoviesByTopUser = WatchMovie::where('user_id', $topUserId)->pluck('movie_id')->toArray();
+            foreach ($watchedMoviesByTopUser as $movieId) {
+                if (!in_array($movieId, $watchedMovies)) {
+                    $recommendedMovies[$movieId] = Movie::find($movieId);
+                }
+            }
+        }
+
+        return $recommendedMovies;
+    }
+
+    private function demographicRecommendations($user, $watchedMovies)
+    {
+        $userCluster = Cluster::where('user_id', $user->id)->first();
+        if (!$userCluster) {
+            return [];
+        }
+
+        $clusterUsers = Cluster::where('cluster', $userCluster->cluster)
+            ->where('user_id', '!=', $user->id)
+            ->pluck('user_id')
+            ->toArray();
+
+        $recommendedMovies = [];
+        foreach ($clusterUsers as $clusterUserId) {
+            $watchedMoviesByClusterUser = WatchMovie::where('user_id', $clusterUserId)->pluck('movie_id')->toArray();
+            foreach ($watchedMoviesByClusterUser as $movieId) {
+                if (!in_array($movieId, $watchedMovies)) {
+                    $recommendedMovies[$movieId] = Movie::find($movieId);
+                }
+            }
+        }
+
+        return $recommendedMovies;
+    }
+
+    private function createRatingMatrix($ratings)
+    {
+        $ratingMatrix = [];
+        foreach ($ratings as $rating) {
+            $ratingMatrix[$rating->user_id][$rating->movie_id] = $rating->rating;
+        }
+        return $ratingMatrix;
+    }
+
+    private function calculateSimilarities($userRatings, $ratingMatrix)
+    {
+        $similarity = [];
+        foreach ($ratingMatrix as $otherUserId => $otherUserRatings) {
+            if ($otherUserId != Auth::id()) {
+                $similarity[$otherUserId] = $this->cosineSimilarity($userRatings, $otherUserRatings);
+            }
+        }
+        arsort($similarity);
+        return $similarity;
+    }
+
+    private function prioritizeRecommendations($recommendedMoviesDetails, $watchedMovies)
+    {
+        $finalRecommendations = [];
+        $weights = [
+            'content_based' => 0.8,
+            'collaborative' => 0.5,
+            'demographic' => 0.3,
+        ];
+
+        foreach ($recommendedMoviesDetails as $type => $movies) {
+            foreach ($movies as $movie) {
+                if (!in_array($movie->id, $watchedMovies)) {
+                    $isInContentBased = isset($recommendedMoviesDetails['content_based'][$movie->id]);
+                    $isInCollaborative = isset($recommendedMoviesDetails['collaborative'][$movie->id]);
+
+                    if ($isInContentBased && $isInCollaborative) {
+                        $movie->weighted_score += 1; // Set weight to 1 if both conditions are met
+                    } else {
+                        // Add weight based on the recommendation type
+                        $movie->weighted_score += $weights[$type];
+                    }
+                    $finalRecommendations[$movie->id] = $movie;
+                }
+            }
+        }
+
+        return $finalRecommendations;
+    }
+
+    private function buildMovieGraph()
+    {
+        $ratings = DB::table('watch_movies')->select('user_id', 'movie_id', 'rating')->get();
         $graph = [];
         foreach ($ratings as $rating) {
             foreach ($ratings as $otherRating) {
-                if ($rating->movie_id != $otherRating->movie_id && $rating->user_id == $otherRating->user_id) {
-                    $graph[$rating->movie_id][$otherRating->movie_id] = 1; // Create an edge between movies
+                if ($rating->movie_id != $otherRating->movie_id && abs($rating->user_id - $otherRating->user_id) <= 1) {
+                    $graph[$rating->movie_id][$otherRating->movie_id] = 1; // Create edge between movies
                 }
             }
         }
@@ -752,7 +829,7 @@ class RecommendationController3 extends Controller
     private function pageRank($graph, $d = 0.85, $maxIterations = 100, $tol = 0.0001)
     {
         $numMovies = count($graph);
-        $pageRank = array_fill_keys(array_keys($graph), 1 / $numMovies); // Initialize PageRank
+        $pageRank = array_fill_keys(array_keys($graph), 1 / $numMovies);
         $newPageRank = [];
 
         for ($i = 0; $i < $maxIterations; $i++) {
@@ -778,12 +855,26 @@ class RecommendationController3 extends Controller
         return $pageRank;
     }
 
-    private function weightedRecommendations($movies, $weight)
+    private function applyPageRank(&$movies, $graph)
     {
+        $pageRankScores = $this->pageRank($graph);
         foreach ($movies as $movie) {
-            $movie->weighted_score = $weight; // Set the weight for the recommendations
+            $pageRankScore = $pageRankScores[$movie->id] ?? 0;
+            if ($pageRankScore == 0) {
+                //random value between 0.01 and 0.03
+                if ($movie->weighted_score == 1) {
+                    $pageRankScore = 0.9998;
+                } else if ($movie->weighted_score == 0.8) {
+                    $pageRankScore = 0.9996;
+                } else if ($movie->weighted_score == 0.5) {
+                    $pageRankScore = 0.9994;
+                } else if ($movie->weighted_score == 0.3) {
+                    $pageRankScore = 0.9992;
+                }
+                $pageRankScores[$movie->id] = $pageRankScore;
+            }
+            $movie->weighted_score *= $pageRankScore;
         }
-        return $movies;
     }
 
     private function cosineSimilarity($vec1, $vec2)
@@ -804,103 +895,178 @@ class RecommendationController3 extends Controller
         return ($normA && $normB) ? ($dotProduct / (sqrt($normA) * sqrt($normB))) : 0.0;
     }
 
+
     public function recommendationDetails()
     {
         $user = Auth::user();
-        $genres = Genre::all();
-        $casts = Cast::all();
-        $languages = Language::all();
-        $pcompanys = ProductionCompany::all();
-        $directors = Director::all();
-        $countries = Country::all();
-        $recommendedMoviesDetails = [];
-        $allMovieIds = Movie::pluck('id')->toArray(); // Fetch all movie IDs for later use
-
-        // 1. Fetch the list of movies the user has already watched
         $watchedMovies = WatchMovie::where('user_id', $user->id)->pluck('movie_id')->toArray();
+        $recommendedMoviesDetails = $this->getHybridRecommendations($user, $watchedMovies);
 
-        $watchedMovies1 = [];
-        for ($i = 0; $i < count($watchedMovies); $i++) {
-            $watchedMovies1[$i] = Movie::find($watchedMovies[$i]);
-        }
-        // 2. Content-Based Recommendation
-        $interestData = Interest::all()->where('user_id', '=', $user->id)->first();
-        if ($interestData) {
-            $data = $this->data2DArrayAll(); // Get 2D array of movie features
-            $numberOfClusters = 10;
-            $result = $this->KmeansControl($numberOfClusters, $data);
-            foreach ($result[0] as $movieId) {
-                if (!in_array($movieId, $watchedMovies)) {
-                    $recommendedMoviesDetails['content_based'][$movieId] = Movie::find($movieId);
-                }
-            }
-        }
-
-        // 3. Collaborative Filtering
-        $ratings = DB::table('watch_movies')
-            ->select('user_id', 'movie_id', 'rating')
-            ->get();
-
-        $ratingMatrix = [];
-        foreach ($ratings as $rating) {
-            $ratingMatrix[$rating->user_id][$rating->movie_id] = $rating->rating;
-        }
-
-        $userRatings = $ratingMatrix[$user->id] ?? [];
-        $similarity = [];
-        if (!empty($userRatings)) {
-            foreach ($ratingMatrix as $other_user_id => $other_user_ratings) {
-                if ($other_user_id != $user->id) {
-                    $similarity[$other_user_id] = $this->cosineSimilarity($userRatings, $other_user_ratings);
-                }
-            }
-
-            arsort($similarity);
-            $topUsers = array_keys(array_slice($similarity, 0, 1, true));
-            $top_id = $topUsers[0];
-            $watch = WatchMovie::where('user_id', '=', $top_id)->get();
-            foreach ($watch as $w) {
-                $movie = Movie::find($w->movie_id);
-                if ($movie && !in_array($movie->id, $watchedMovies)) {
-                    $recommendedMoviesDetails['collaborative'][$movie->id] = $movie;
-                }
-            }
-            //dd($recommendedMoviesDetails['collaborative']);
-        }
-
-        // 4. Demographic Information
-        // if (empty($recommendedMoviesDetails['content_based']) && empty($recommendedMoviesDetails['collaborative'])) {
-        $cluster = Cluster::where('user_id', '=', $user->id)->first();
-        if ($cluster) {
-            $cluster_users = Cluster::where('cluster', '=', $cluster->cluster)->where('user_id', '!=', $user->id)->get();
-            foreach ($cluster_users as $cluster_user) {
-                $watch = WatchMovie::where('user_id', '=', $cluster_user->user_id)->get();
-                foreach ($watch as $w) {
-                    $movie = Movie::find($w->movie_id);
-                    if ($movie && !in_array($movie->id, $watchedMovies)) {
-                        $recommendedMoviesDetails['demographic'][$movie->id] = $movie;
-                    }
-                }
-            }
-        }
-
+        // Separate recommendations by category
         $collaborativeUsers = $recommendedMoviesDetails['collaborative'] ?? [];
-        $clusterUsers = $recommendedMoviesDetails['content_based'] ?? [];
-        $bothCollaborativeAndContent = array_intersect_key($collaborativeUsers, $clusterUsers);
-        $interestedMovies = $recommendedMoviesDetails['demographic'] ?? [];
-        $interestedMovies = array_diff_key($interestedMovies, $bothCollaborativeAndContent);
-        $interestedMovies = array_diff_key($interestedMovies, $collaborativeUsers);
-        $interestedMovies = array_diff_key($interestedMovies, $clusterUsers);
-        //dd($bothCollaborativeAndContent);
+        $contentBasedUsers = $recommendedMoviesDetails['content_based'] ?? [];
+        $demographicUsers = $recommendedMoviesDetails['demographic'] ?? [];
+
+        // Find movies recommended by both collaborative and content-based methods
+        $bothCollaborativeAndContent = array_intersect_key($collaborativeUsers, $contentBasedUsers);
+
+        // Make sure the combined results are unique
+        $bothCollaborativeAndContent = $this->uniqueMovies($bothCollaborativeAndContent);
+
+        // Refine the demographic recommendations by excluding overlaps
+        $interestedMovies = array_diff_key($demographicUsers, $bothCollaborativeAndContent, $collaborativeUsers, $contentBasedUsers);
+
+        // Ensure unique movies in interestedMovies
+        $interestedMovies = $this->uniqueMovies($interestedMovies);
+
+        // Calculate initial weighted scores for movies
+        $initialWeightedScores = $this->calculateWeightedScores($recommendedMoviesDetails);
+
+        // Make sure the initial weighted scores are unique
+        $initialWeightedScores = $this->uniqueMovies($initialWeightedScores);
+
+        // Calculate PageRank scores for movies
+        $pageRankScores = $this->calculatePageRank($recommendedMoviesDetails);
+
+        // Adjust weights by applying PageRank
+        $finalWeightedScores = $this->applyPageRankToWeights($initialWeightedScores, $pageRankScores);
+
+        // Ensure final weighted scores are unique
+        $finalWeightedScores = $this->uniqueMovies($finalWeightedScores);
 
         return view('pages.recommendation_details', [
-            'cosineSimilarityMatrix' => $similarity,
+            'cosineSimilarityMatrix' => $recommendedMoviesDetails['similarity'] ?? [],
             'bothCollaborativeAndContent' => $bothCollaborativeAndContent,
-            'collaborativeUsers' => $collaborativeUsers,
-            'clusterUsers' => $clusterUsers,
+            'collaborativeUsers' => $this->uniqueMovies($collaborativeUsers),
+            'contentBasedUsers' => $this->uniqueMovies($contentBasedUsers),
             'interestedMovies' => $interestedMovies,
+            'pageRankScores' => $pageRankScores,
+            'initialWeightedScores' => $initialWeightedScores,
+            'finalWeightedScores' => $finalWeightedScores,
         ]);
     }
+
+    // Function to ensure unique movies in an array
+    private function uniqueMovies($movies)
+    {
+        // Ensure movies are unique based on movie ID
+        $uniqueMovies = [];
+        foreach ($movies as $movie) {
+            if (is_object($movie) && !isset($uniqueMovies[$movie->id])) {
+                $uniqueMovies[$movie->id] = $movie;
+            }
+        }
+
+        return $uniqueMovies;
+    }
+
+
+    private function applyPageRankToWeights($initialWeightedScores, &$pageRankScores)
+    {
+        foreach ($initialWeightedScores as $movieId => $movie) {
+            $pageRankScore = $pageRankScores[$movieId] ?? 0;
+            if ($pageRankScore == 0) {
+                //random value between 0.015 and 0.021
+                if ($movie->weighted_score == 1) {
+                    $pageRankScore = 0.9998;
+                } else if ($movie->weighted_score == 0.8) {
+                    $pageRankScore = 0.9996;
+                } else if ($movie->weighted_score == 0.5) {
+                    $pageRankScore = 0.9994;
+                } else if ($movie->weighted_score == 0.3) {
+                    $pageRankScore = 0.9992;
+                }
+                $pageRankScores[$movieId] = $pageRankScore;
+            }
+            $movie->final_weighted_score = $movie->weighted_score * $pageRankScore; // Apply PageRank
+        }
+
+        // Sort movies by final weighted score in descending order
+        uasort($initialWeightedScores, function ($a, $b) {
+            return $b->final_weighted_score <=> $a->final_weighted_score;
+        });
+
+        return $initialWeightedScores;
+    }
+
+    private function calculateSimilarityMatrix($user)
+    {
+        // Fetch all ratings from the database
+        $ratings = DB::table('watch_movies')->select('user_id', 'movie_id', 'rating')->get();
+
+        // Create the rating matrix
+        $ratingMatrix = $this->createRatingMatrix($ratings);
+
+        // Get user ratings
+        $userRatings = $ratingMatrix[$user->id] ?? [];
+
+        // Calculate cosine similarity with other users
+        $similarities = $this->calculateSimilarities($userRatings, $ratingMatrix);
+
+        return $similarities;
+    }
+
+    private function getHybridRecommendations($user, $watchedMovies)
+    {
+        $recommendedMoviesDetails = [];
+
+        // 1. Content-Based Recommendations
+        $contentBasedMovies = $this->contentBasedRecommendations($user, $watchedMovies);
+        $recommendedMoviesDetails['content_based'] = $contentBasedMovies;
+
+        // 2. Collaborative Filtering Recommendations
+        $collaborativeMovies = $this->collaborativeFilteringRecommendations($user, $watchedMovies);
+        $recommendedMoviesDetails['collaborative'] = $collaborativeMovies;
+
+        // 3. Demographic Recommendations
+        $demographicMovies = $this->demographicRecommendations($user, $watchedMovies);
+        $recommendedMoviesDetails['demographic'] = $demographicMovies;
+
+        // 4. Cosine Similarity Calculation
+        $recommendedMoviesDetails['similarity'] = $this->calculateSimilarityMatrix($user);
+
+        return $recommendedMoviesDetails;
+    }
+
+    private function calculateWeightedScores($recommendedMoviesDetails)
+    {
+        $weights = [
+            'content_based' => 0.8,
+            'collaborative' => 0.5,
+            'demographic' => 0.3,
+        ];
+
+        $finalRecommendations = [];
+
+        foreach ($recommendedMoviesDetails as $type => $movies) {
+            if ($type === 'similarity') {
+                continue; // Skip the 'similarity' key
+            }
+
+            foreach ($movies as $movie) {
+                // Check if the movie is recommended by both content-based and collaborative filtering
+                $isInContentBased = isset($recommendedMoviesDetails['content_based'][$movie->id]);
+                $isInCollaborative = isset($recommendedMoviesDetails['collaborative'][$movie->id]);
+
+                if ($isInContentBased && $isInCollaborative) {
+                    $movie->weighted_score += 1; // Set weight to 1 if both conditions are met
+                } else {
+                    // Add weight based on the recommendation type
+                    $movie->weighted_score += $weights[$type];
+                }
+                $finalRecommendations[$movie->id] = $movie;
+            }
+        }
+        return $finalRecommendations;
+    }
+
+
+    private function calculatePageRank($recommendedMoviesDetails)
+    {
+        $graph = $this->buildMovieGraph($recommendedMoviesDetails);
+        return $this->pageRank($graph);
+    }
+
 
     public function KmeansControl($numberOfClusters, $data)
     {
