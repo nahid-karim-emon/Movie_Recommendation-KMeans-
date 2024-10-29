@@ -168,8 +168,35 @@
         </div>
         <div class="col-lg-7">
           <div class="table-responsive">
-            <h5 class="text-center">Recommended Movies</h5>
-      
+            <h5 class="text-center">Recommended Movies
+              @if(request()->routeIs('user.recommendations.show'))
+              ({{ ucfirst(str_replace('_', ' ', $filter)) }})
+            @else
+              (All)
+            @endif
+            </h5>
+
+            <!-- Filter Form with Redirect -->
+            <div class="row mt-3 justify-content-center">
+              <div class="form-group d-flex align-items-center">
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="filterDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Filter By Type
+                  </a>
+                  <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                    <li><a class="dropdown-item" href="{{ route('user.recommendation.view9')  }}">All</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','content_based')}}">Content Based</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','collaborative')}}">Collaborative</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','collaborative_likes')}}">Collaborative Likes</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','bothCollaborativeAndLikes')}}">Both Collaborative & Likes</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','bothCollaborativeAndContent')}}">Both Collaborative & Content</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','demographic')}}">Demographic</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','dislike_recommend')}}">Dislike Recommended</a></li>
+                  </ul>
+                </li>                
+              </div>
+            </div>
+
             <!-- Show Count Options -->
             <div class="row mt-3 justify-content-center">
               <div class="form-group movie-count-wrap mb-0 d-flex align-items-center">
@@ -285,5 +312,3 @@
   // Initialize with all movies displayed
   document.getElementById('recommendedMovieCount').dispatchEvent(new Event('input'));
 </script>
-
-

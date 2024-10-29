@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Movie extends Model
 {
     use HasFactory;
+    public function likes()
+    {
+        return $this->hasMany(MovieLike::class);
+    }
 
     public function genres()
     {

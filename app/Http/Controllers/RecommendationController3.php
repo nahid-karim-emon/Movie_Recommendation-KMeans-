@@ -563,9 +563,27 @@ class RecommendationController3 extends Controller
         $user = Auth::user();
         $watchedMovies = WatchMovie::where('user_id', $user->id)->pluck('movie_id')->toArray();
         $recommendedMoviesDetails = $this->getRecommendations($user, $watchedMovies);
+        $contentBasedMovie = $recommendedMoviesDetails['content_based'];
+        $collaborativeMovie = $recommendedMoviesDetails['collaborative'];
+        $likesCollaborativeMovie = $recommendedMoviesDetails['collaborative_likes'];
+        $demographicMovies = $recommendedMoviesDetails['demographic'];
+
+        // Apply union for bothCollaborativeAndLikes
+        $bothCollaborativeAndLikes = array_merge($collaborativeMovie, $likesCollaborativeMovie);
+
+        // dd($bothCollaborativeAndLikes);
+
+        // Find the union of content-based and bothCollaborativeAndLikes
+        $bothCollaborativeAndContent = array_intersect_key($contentBasedMovie, $bothCollaborativeAndLikes);
+        //dd($bothCollaborativeAndContent);
 
         // Prioritize and sort recommendations
         $finalRecommendations = $this->prioritizeRecommendations($recommendedMoviesDetails, $watchedMovies);
+        $finalRecommendations = $this->uniqueMovies($finalRecommendations);
+
+        // Fetch disliked recommendations
+        $dislikeRecommendMovies = $this->filterDislikedGenres($finalRecommendations, $user);
+        //dd($dislikeRecommendMovies);
 
         // Fetch remaining movies not recommended by any method
         $remainingMovieIds = array_diff(Movie::pluck('id')->toArray(), array_keys($finalRecommendations));
@@ -573,10 +591,15 @@ class RecommendationController3 extends Controller
             if (!in_array($movieId, $watchedMovies)) {
                 $movie = Movie::find($movieId);
                 if ($movie) {
-                    $movie->weighted_score = 0; // Assign weight 0 to non-recommended movies
+                    $movie->weighted_score = 0.1; // Assign weight 0 to non-recommended movies
                     $finalRecommendations[$movieId] = $movie;
                 }
             }
+        }
+
+        // Update weighted score for disliked movies
+        foreach ($dislikeRecommendMovies as $movie) {
+            $movie->weighted_score = 0.0;
         }
 
         // Apply PageRank to adjust scores
@@ -592,9 +615,25 @@ class RecommendationController3 extends Controller
         return view('pages.recom4', [
             'watchedMovies' => Movie::findMany($watchedMovies), // Fetch watched movies
             'recommendedMovies' => $finalRecommendations,
-            'recommendationTypes' => $recommendedMoviesDetails,
+            'bothCollaborativeAndContent' => $bothCollaborativeAndContent,
+            'bothCollaborativeAndLikes' => $bothCollaborativeAndLikes,
+            'contentBasedMovies' => $contentBasedMovie,
+            'collaborativeMovies' => $collaborativeMovie,
+            'likesCollaborativeMovies' => $likesCollaborativeMovie,
+            'demographicMovies' => $demographicMovies,
+            'dislikeRecommendMovies' => $dislikeRecommendMovies,
+            'recommendationTypes' => [
+                'bothCollaborativeAndContent',
+                'content_based',
+                'collaborative',
+                'collaborative_likes',
+                'bothCollaborativeAndLikes',
+                'demographic',
+                'dislike_recommend'
+            ],
         ]);
     }
+
 
     private function getRecommendations($user, $watchedMovies)
     {
@@ -608,12 +647,53 @@ class RecommendationController3 extends Controller
         $collaborativeMovies = $this->collaborativeFilteringRecommendations($user, $watchedMovies);
         $recommendedMoviesDetails['collaborative'] = $collaborativeMovies;
 
+        // Collaborative Filtering based on likes
+        $likesCollaborativeMovies = $this->collaborativeFilteringByLikes($user, $watchedMovies);
+        $recommendedMoviesDetails['collaborative_likes'] = $likesCollaborativeMovies;
+
         // Demographic Recommendations
         $demographicMovies = $this->demographicRecommendations($user, $watchedMovies);
         $recommendedMoviesDetails['demographic'] = $demographicMovies;
 
         return $recommendedMoviesDetails;
     }
+    private function filterDislikedGenres($recommendedMovies, $user)
+    {
+        // Fetch disliked genres by the user
+        $dislikedGenres = DB::table('movies')
+            ->join('movie_likes', 'movies.id', '=', 'movie_likes.movie_id')
+            ->join('movie_genres', 'movies.id', '=', 'movie_genres.movie_id')
+            ->where('movie_likes.user_id', $user->id)
+            ->where('movie_likes.like', 0) // Disliked movies
+            ->pluck('movie_genres.genre_id')
+            ->toArray();
+
+        // Fetch disliked casts by the user
+        $dislikedCasts = DB::table('movies')
+            ->join('movie_likes', 'movies.id', '=', 'movie_likes.movie_id')
+            ->join('movie_casts', 'movies.id', '=', 'movie_casts.movie_id')
+            ->where('movie_likes.user_id', $user->id)
+            ->where('movie_likes.like', 0) // Disliked movies
+            ->pluck('movie_casts.cast_id')
+            ->toArray();
+
+        // Initialize an array for storing movies with disliked genres or casts
+        $dislikeRecommendMovies = [];
+
+        // Check each recommended movie for disliked genres or casts
+        foreach ($recommendedMovies as $movie) {
+            //$hasDislikedGenre = $movie->MovieGenre->pluck('genre_id')->intersect($dislikedGenres)->isNotEmpty();
+            $hasDislikedCast = $movie->MovieCast->pluck('cast_id')->intersect($dislikedCasts)->isNotEmpty();
+
+            // If the movie contains a disliked genre or cast, add it to the list
+            if ($hasDislikedCast) {
+                $dislikeRecommendMovies[$movie->id] = $movie;
+            }
+        }
+
+        return $dislikeRecommendMovies;
+    }
+
 
     private function contentBasedRecommendations($user, $watchedMovies)
     {
@@ -711,6 +791,56 @@ class RecommendationController3 extends Controller
         return $similarMovies;
     }
 
+    private function collaborativeFilteringByLikes($user, $watchedMovies)
+    {
+        // Fetch likes/dislikes data from the database
+        $likesData = DB::table('movie_likes')->select('user_id', 'movie_id', 'like')->get();
+
+        // Create the likes matrix
+        $likesMatrix = $this->createLikesMatrix($likesData);
+
+        // Get user likes/dislikes
+        $userLikes = $likesMatrix[$user->id] ?? [];
+
+        // Return an empty array if no likes/dislikes are found for the user
+        if (empty($userLikes)) {
+            return [];
+        }
+
+        // Calculate cosine similarity with other users based on likes
+        $similarityScores = $this->calculateSimilarities($userLikes, $likesMatrix);
+
+        // Find the top similar users
+        $topUsers = array_keys(array_slice($similarityScores, 0, 1, true));
+
+        $recommendedMovies = [];
+        foreach ($topUsers as $topUserId) {
+            $likedMoviesByTopUser = DB::table('movie_likes')
+                ->where('user_id', $topUserId)
+                ->where('like', 1) // Only consider liked movies
+                ->pluck('movie_id')
+                ->toArray();
+
+            foreach ($likedMoviesByTopUser as $movieId) {
+                if (!in_array($movieId, $watchedMovies)) {
+                    $recommendedMovies[$movieId] = Movie::find($movieId);
+                }
+            }
+        }
+
+        return $recommendedMovies;
+    }
+
+    private function createLikesMatrix($likesData)
+    {
+        $likesMatrix = [];
+        foreach ($likesData as $like) {
+            $likesMatrix[$like->user_id][$like->movie_id] = $like->like ? 1 : -1;
+        }
+        return $likesMatrix;
+    }
+
+
     private function collaborativeFilteringRecommendations($user, $watchedMovies)
     {
         $ratings = DB::table('watch_movies')->select('user_id', 'movie_id', 'rating')->get();
@@ -789,16 +919,21 @@ class RecommendationController3 extends Controller
         $weights = [
             'content_based' => 0.8,
             'collaborative' => 0.5,
+            'collaborative_likes' => 0.5,
             'demographic' => 0.3,
         ];
+        $collab = $recommendedMoviesDetails['collaborative'] ?? [];
+        $likesCol = $recommendedMoviesDetails['collaborative_likes'] ?? [];
+        $content = $recommendedMoviesDetails['content_based'] ?? [];
+
+        $bothColla = array_merge($collab, $likesCol);
+        $temMovie = array_intersect_key($content, $bothColla);
 
         foreach ($recommendedMoviesDetails as $type => $movies) {
             foreach ($movies as $movie) {
                 if (!in_array($movie->id, $watchedMovies)) {
-                    $isInContentBased = isset($recommendedMoviesDetails['content_based'][$movie->id]);
-                    $isInCollaborative = isset($recommendedMoviesDetails['collaborative'][$movie->id]);
 
-                    if ($isInContentBased && $isInCollaborative) {
+                    if (isset($temMovie[$movie->id])) {
                         $movie->weighted_score += 1; // Set weight to 1 if both conditions are met
                     } else {
                         // Add weight based on the recommendation type
@@ -900,6 +1035,61 @@ class RecommendationController3 extends Controller
         return ($normA && $normB) ? ($dotProduct / (sqrt($normA) * sqrt($normB))) : 0.0;
     }
 
+    public function view10($filter)
+    {
+        $user = Auth::user();
+        $watchedMovies = WatchMovie::where('user_id', $user->id)->pluck('movie_id')->toArray();
+        $recommendedMoviesDetails = $this->getRecommendations($user, $watchedMovies);
+        $contentBasedMovie = $recommendedMoviesDetails['content_based'];
+        $collaborativeMovie = $recommendedMoviesDetails['collaborative'];
+        $likesCollaborativeMovie = $recommendedMoviesDetails['collaborative_likes'];
+        $demographicMovies = $recommendedMoviesDetails['demographic'];
+
+        // Apply union for bothCollaborativeAndLikes
+        $bothCollaborativeAndLikes = array_merge($collaborativeMovie, $likesCollaborativeMovie);
+
+        // dd($bothCollaborativeAndLikes);
+
+        // Find the union of content-based and bothCollaborativeAndLikes
+        $bothCollaborativeAndContent = array_intersect_key($contentBasedMovie, $bothCollaborativeAndLikes);
+        //dd($bothCollaborativeAndContent);
+
+        // Prioritize and sort recommendations
+        $finalRecommendations = $this->prioritizeRecommendations($recommendedMoviesDetails, $watchedMovies);
+        $finalRecommendations = $this->uniqueMovies($finalRecommendations);
+
+        // Fetch disliked recommendations
+        $dislikeRecommendMovies = $this->filterDislikedGenres($finalRecommendations, $user);
+        //dd($dislikeRecommendMovies);
+        $recommendedMovies = [];
+        switch ($filter) {
+            case 'content_based':
+                $recommendedMovies = $this->uniqueMovies($contentBasedMovie);
+                break;
+            case 'collaborative':
+                $recommendedMovies = $this->uniqueMovies($collaborativeMovie);
+                break;
+            case 'collaborative_likes':
+                $recommendedMovies = $this->uniqueMovies($likesCollaborativeMovie);
+                break;
+            case 'demographic':
+                $recommendedMovies = $this->uniqueMovies($demographicMovies);
+                break;
+            case 'bothCollaborativeAndContent':
+                $recommendedMovies = $this->uniqueMovies($bothCollaborativeAndContent);
+                break;
+            case 'bothCollaborativeAndLikes':
+                $recommendedMovies = $this->uniqueMovies($bothCollaborativeAndLikes);
+                break;
+            case 'dislike_recommend':
+                $recommendedMovies = $this->uniqueMovies($dislikeRecommendMovies);
+                break;
+            default:
+                $recommendedMovies = $this->uniqueMovies($finalRecommendations);
+        }
+        return view('pages.recom4', ['recommendedMovies' => $recommendedMovies, 'watchedMovies' => Movie::findMany($watchedMovies), 'filter' => $filter]);
+    }
+
 
     public function recommendationDetails()
     {
@@ -909,13 +1099,15 @@ class RecommendationController3 extends Controller
 
         // Separate recommendations by category
         $collaborativeUsers = $recommendedMoviesDetails['collaborative'] ?? [];
+        $likesCollaborativeMovie = $recommendedMoviesDetails['collaborative_likes'] ?? [];
         $contentBasedUsers = $recommendedMoviesDetails['content_based'] ?? [];
         $demographicUsers = $recommendedMoviesDetails['demographic'] ?? [];
 
-        // Find movies recommended by both collaborative and content-based methods
-        $bothCollaborativeAndContent = array_intersect_key($collaborativeUsers, $contentBasedUsers);
-        $bothCollaborativeAndContent = $this->uniqueMovies($bothCollaborativeAndContent);
+        $bothCollaborativeAndLikes = array_merge($collaborativeUsers, $likesCollaborativeMovie);
 
+        // Find movies recommended by both collaborative and content-based methods
+        $bothCollaborativeAndContent = array_intersect_key($bothCollaborativeAndLikes, $contentBasedUsers);
+        $bothCollaborativeAndContent = $this->uniqueMovies($bothCollaborativeAndContent);
         // Refine the demographic recommendations by excluding overlaps
         $interestedMovies = array_diff_key($demographicUsers, $bothCollaborativeAndContent, $collaborativeUsers, $contentBasedUsers);
         $interestedMovies = $this->uniqueMovies($interestedMovies);
@@ -935,7 +1127,7 @@ class RecommendationController3 extends Controller
         return view('pages.recommendation_details', [
             'cosineSimilarityMatrix' => $recommendedMoviesDetails['similarity'] ?? [],
             'bothCollaborativeAndContent' => $bothCollaborativeAndContent,
-            'collaborativeUsers' => $this->uniqueMovies($collaborativeUsers),
+            'collaborativeUsers' => $this->uniqueMovies($bothCollaborativeAndLikes),
             'contentBasedUsers' => $this->uniqueMovies($contentBasedUsers),
             'interestedMovies' => $interestedMovies,
             'pageRankScores' => $pageRankScores,
@@ -1040,18 +1232,21 @@ class RecommendationController3 extends Controller
         ];
 
         $finalRecommendations = [];
+        $collab = $recommendedMoviesDetails['collaborative'] ?? [];
+        $likesCol = $recommendedMoviesDetails['collaborative_likes'] ?? [];
+        $content = $recommendedMoviesDetails['content_based'] ?? [];
+
+        $bothColla = array_merge($collab, $likesCol);
+        $temMovie = array_intersect_key($content, $bothColla);
+        //dd($temMovie);
 
         foreach ($recommendedMoviesDetails as $type => $movies) {
             if ($type === 'similarity') {
                 continue; // Skip the 'similarity' key
             }
-
             foreach ($movies as $movie) {
                 // Check if the movie is recommended by both content-based and collaborative filtering
-                $isInContentBased = isset($recommendedMoviesDetails['content_based'][$movie->id]);
-                $isInCollaborative = isset($recommendedMoviesDetails['collaborative'][$movie->id]);
-
-                if ($isInContentBased && $isInCollaborative) {
+                if (isset($temMovie[$movie->id])) {
                     $movie->weighted_score += 1; // Set weight to 1 if both conditions are met
                 } else {
                     // Add weight based on the recommendation type

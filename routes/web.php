@@ -35,6 +35,7 @@ Route::resource('movie', MovieController::class);
 Route::get('user', [ProfileController::class, 'index'])->middleware(['auth'])->name('user.dashboard');
 Route::get('watch-movies', [ProfileController::class, 'view1'])->middleware(['auth'])->name('user.watch');
 Route::get('recommendationDet', [RecommendationController3::class, 'recommendationDetails'])->name('user.recommendationDetails');
+Route::get('/recommendations/{filter}', [RecommendationController3::class, 'view10'])->name('user.recommendations.show');
 // })->->name('dashboard');
 
 Route::middleware('auth')->prefix('user')->name('user.')->group(function () {
