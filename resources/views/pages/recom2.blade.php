@@ -7,7 +7,7 @@
   <style>
     #events {
       background-color: #F8F9FA;
-      font-family: 'Arial, sans-serif';
+      /* font-family: 'Arial, sans-serif'; */
     }
 
     .movie-card {

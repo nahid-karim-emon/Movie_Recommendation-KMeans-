@@ -13,7 +13,7 @@
 
     #movies {
       background-color: #F8F9FA;
-      font-family: 'Arial, sans-serif';
+      /* font-family: 'Arial, sans-serif'; */
     }
 
     .line {
@@ -99,7 +99,7 @@
 
     .movie-count-wrap{
     
-    margin-bottom: 20px !important;
+    /* margin-bottom: 20px !important; */
 
     }
     .movie-count-label {
@@ -108,6 +108,38 @@
 .movie-count-input {
     border: 1px solid black;
 }
+ul li{
+  list-style-type: none !important;
+}
+li{
+  list-style-type: none !important;
+}
+
+.filter-type{
+    border: 1px solid #d4cfcf;
+    padding: 10px 25px;
+    background-color: #00000014;
+    border-radius: 8px;
+    color: black;
+
+}
+.movie-count-wrap{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #d4cfcf;
+    padding: 6px 20px;
+    background-color: #00000014;
+    border-radius: 8px;
+    color: black;
+    font-size: 8px;
+
+}
+
+  .movie-count-wrap label{
+    font-size: 17px;
+    margin-bottom: 0;
+ }
   </style>
 
   <div class="container-xl">
@@ -119,7 +151,7 @@
     </div>
 
     <!-- Recommendation Details Link -->
-    <div class="recommendation-details">
+    <div class="recommendation-details me-2">
       <a href="{{route('user.recommendationDetails')}}" class="nav-link button">Recommendation Details</a>
     </div>
     <!-- Movie Tables -->
@@ -170,7 +202,24 @@
           <div class="table-responsive">
             <h5 class="text-center">Recommended Movies
               @if(request()->routeIs('user.recommendations.show'))
-              ({{ ucfirst(str_replace('_', ' ', $filter)) }})
+              (
+              @if($filter == 'content_based')
+                Content Based
+              @elseif($filter == 'collaborative')
+                Collaborative Based On Ratings
+              @elseif($filter == 'collaborative_likes')
+                Collaborative Based On Likes
+              @elseif($filter == 'bothCollaborativeAndLikes')
+                Collaborative Based On Both Ratings & Likes
+              @elseif($filter == 'bothCollaborativeAndContent')
+                Based On Both Collaborative & Content
+              @elseif($filter == 'demographic')
+                Based On Demographic Information
+              @elseif($filter == 'dislike_recommend')
+                User Disliked But Recommended
+              @endif
+              )
+
             @else
               (All)
             @endif
@@ -178,31 +227,39 @@
 
             <!-- Filter Form with Redirect -->
             <div class="row mt-3 justify-content-center">
-              <div class="form-group d-flex align-items-center">
+             
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between">
+              <div class=" movie-count-wrap mb-0 ">
+                <label for="recommendedMovieCount" class="movie-count-label mr-2 mb-0">Show:</label>
+                <input type="number" id="recommendedMovieCount" class="form-control movie-count-input" value="all" min="1" max="30">
+              </div>
+              <div class=" ">
                 <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#" id="filterDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <a class="nav-link dropdown-toggle filter-type" href="#" id="filterDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Filter By Type
                   </a>
                   <ul class="dropdown-menu" aria-labelledby="filterDropdown">
                     <li><a class="dropdown-item" href="{{ route('user.recommendation.view9')  }}">All</a></li>
-                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','content_based')}}">Content Based</a></li>
-                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','collaborative')}}">Collaborative</a></li>
-                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','collaborative_likes')}}">Collaborative Likes</a></li>
-                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','bothCollaborativeAndLikes')}}">Both Collaborative & Likes</a></li>
                     <li><a class="dropdown-item" href="{{ route('user.recommendations.show','bothCollaborativeAndContent')}}">Both Collaborative & Content</a></li>
-                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','demographic')}}">Demographic</a></li>
-                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','dislike_recommend')}}">Dislike Recommended</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','content_based')}}">Content Based </a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','collaborative')}}">Collaborative Based On Ratings</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','collaborative_likes')}}">Collaborative Based On Likes</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','bothCollaborativeAndLikes')}}">Collaborative Based On Both Ratings & Likes</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','demographic')}}">Demographic Recommendation</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','dislike_recommend')}}">Dislike</a></li>
                   </ul>
                 </li>                
               </div>
             </div>
 
             <!-- Show Count Options -->
-            <div class="row mt-3 justify-content-center">
-              <div class="form-group movie-count-wrap mb-0 d-flex align-items-center">
-                <label for="recommendedMovieCount" class="movie-count-label mr-2 mb-0">Show:</label>
-                <input type="number" id="recommendedMovieCount" class="form-control movie-count-input" value="all" min="1" max="30">
-              </div>
+            <div class="row mt-3 d-flex justify-content-between">
+             
+              {{--  --}}
+              
+              {{--  --}}
             </div>
       
             <table class="table table-bordered table-striped" width="100%" cellspacing="0">

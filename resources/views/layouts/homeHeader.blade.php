@@ -124,10 +124,10 @@
                     <li><a class="dropdown-item" href="{{ route('user.recommendation.view') }}">Recommendation (Euclidean)</a></li>
                     <li><a class="dropdown-item" href="{{ route('user.recommendation.viewm') }}">Recommendation (Manhantan)</a></li> --}}
                     <li><a class="dropdown-item" href="{{ route('user.recommendation.view9') }}">Recommendation (Hybrid Recommendation)</a></li>
-                    <li><a class="dropdown-item" href="{{ route('user.recommendation.view8') }}">Recommendation (Collaborative Recommendation using Cosine similarity)</a></li>
+                    {{-- <li><a class="dropdown-item" href="{{ route('user.recommendation.view8') }}">Recommendation (Collaborative Recommendation using Cosine similarity)</a></li>
                     <li><a class="dropdown-item" href="{{ route('user.recommendation.view7') }}">Recommendation (Content Based Recommendation)</a></li>
                     <li><a class="dropdown-item" href="{{ route('user.recommendation.view3') }}">Recommendation (User prefarence Based Recommendation using K-Means Clustering)</a></li>
-                    <li><a class="dropdown-item" href="{{ route('user.recommendation.view4') }}">Recommendation (User prefarence Based Recommendation using K-Nearest Neighbour)</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendation.view4') }}">Recommendation (User prefarence Based Recommendation using K-Nearest Neighbour)</a></li> --}}
                   </ul>
                 </li>
                 {{-- <li><a class="dropdown-item" href="{{ route('user.profile.view') }}">Profile</a></li> --}}

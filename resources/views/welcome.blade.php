@@ -6,7 +6,7 @@
 <section id="center" class="center_home">
     <style>
         body {
-        font-family: 'Arial, sans-serif';
+        /* font-family: 'Arial, sans-serif'; */
         background-color: #F8F9FA;
       }
     </style>

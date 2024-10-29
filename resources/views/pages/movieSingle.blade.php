@@ -8,7 +8,7 @@
   <section id="events" class="events mt-3">
     <style>
       body {
-        font-family: 'Arial, sans-serif';
+        /* font-family: 'Arial, sans-serif'; */
         background-color: #F8F9FA;
       }
 
