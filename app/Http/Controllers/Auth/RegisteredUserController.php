@@ -32,7 +32,7 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255','regex:/(.+)@(.+)\.(.+)/i', 'unique:'.User::class],
+            'email' => ['required', 'string', 'email', 'max:255', 'regex:/(.+)@(.+)\.(.+)/i', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -41,6 +41,14 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        $weight = new \App\Models\Weight();
+        $weight->user_id = $user->id;
+        $weight->content_based = 0.80;
+        $weight->collaborative = 0.50;
+        $weight->collaborative_likes = 0.50;
+        $weight->demographic = 0.30;
+        $weight->save();
 
         event(new Registered($user));
 

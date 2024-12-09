@@ -152,6 +152,7 @@ li{
 
     <!-- Recommendation Details Link -->
     <div class="recommendation-details me-2">
+      <a href="{{route('weights.index')}}" class="nav-link button">Update Weights</a>
       <a href="{{route('user.recommendationDetails')}}" class="nav-link button">Recommendation Details</a>
     </div>
     <!-- Movie Tables -->

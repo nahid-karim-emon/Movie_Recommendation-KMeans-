@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MovieController;
+use App\Http\Controllers\WeightController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\RecommendationController;
@@ -36,6 +37,8 @@ Route::get('user', [ProfileController::class, 'index'])->middleware(['auth'])->n
 Route::get('watch-movies', [ProfileController::class, 'view1'])->middleware(['auth'])->name('user.watch');
 Route::get('recommendationDet', [RecommendationController3::class, 'recommendationDetails'])->name('user.recommendationDetails');
 Route::get('/recommendations/{filter}', [RecommendationController3::class, 'view10'])->name('user.recommendations.show');
+Route::get('/weights', [WeightController::class, 'index'])->middleware(['auth'])->name('weights.index');
+Route::post('/weights/{id}', [WeightController::class, 'update'])->middleware(['auth'])->name('weights.update');
 // })->->name('dashboard');
 
 Route::middleware('auth')->prefix('user')->name('user.')->group(function () {

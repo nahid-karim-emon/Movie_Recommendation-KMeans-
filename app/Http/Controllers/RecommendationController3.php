@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Cast;
 use App\Models\User;
 use App\Models\Genre;
-use App\Models\Cluster;
 use App\Models\Movie;
+use App\Models\Weight;
+use App\Models\Cluster;
 use App\Models\Country;
 use App\Models\Director;
 use App\Models\Interest;
@@ -602,11 +603,12 @@ class RecommendationController3 extends Controller
     private function prioritizeRecommendations($recommendedMoviesDetails, $watchedMovies)
     {
         $finalRecommendations = [];
+        $weight = Weight::where('user_id', Auth::id())->firstOrFail();
         $weights = [
-            'content_based' => 0.8,
-            'collaborative' => 0.5,
-            'collaborative_likes' => 0.5,
-            'demographic' => 0.3,
+            'content_based' => $weight->content_based,
+            'collaborative' => $weight->collaborative,
+            'collaborative_likes' => $weight->collaborative_likes,
+            'demographic' => $weight->demographic,
         ];
         $collab = $recommendedMoviesDetails['collaborative'] ?? [];
         $likesCol = $recommendedMoviesDetails['collaborative_likes'] ?? [];
@@ -911,10 +913,12 @@ class RecommendationController3 extends Controller
 
     private function calculateWeightedScores($recommendedMoviesDetails)
     {
+        $weight = Weight::where('user_id', Auth::id())->firstOrFail();
         $weights = [
-            'content_based' => 0.8,
-            'collaborative' => 0.5,
-            'demographic' => 0.3,
+            'content_based' => $weight->content_based,
+            'collaborative' => $weight->collaborative,
+            'collaborative_likes' => $weight->collaborative_likes,
+            'demographic' => $weight->demographic,
         ];
 
         $finalRecommendations = [];
