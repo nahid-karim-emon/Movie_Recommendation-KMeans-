@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Weight;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\WeightController;
@@ -39,6 +40,7 @@ Route::get('recommendationDet', [RecommendationController3::class, 'recommendati
 Route::get('/recommendations/{filter}', [RecommendationController3::class, 'view10'])->name('user.recommendations.show');
 Route::get('/weights', [WeightController::class, 'index'])->middleware(['auth'])->name('weights.index');
 Route::post('/weights/{id}', [WeightController::class, 'update'])->middleware(['auth'])->name('weights.update');
+Route::get('/recommendationHyb/regenerate', [RecommendationController3::class, 'regenerate'])->name('recommendations.regenerate');
 // })->->name('dashboard');
 
 Route::middleware('auth')->prefix('user')->name('user.')->group(function () {

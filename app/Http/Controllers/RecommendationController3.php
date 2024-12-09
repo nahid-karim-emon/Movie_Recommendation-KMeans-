@@ -723,6 +723,30 @@ class RecommendationController3 extends Controller
         return ($normA && $normB) ? ($dotProduct / (sqrt($normA) * sqrt($normB))) : 0.0;
     }
 
+    // regenarate weights
+
+    public function regenerate()
+    {
+        // Logic to regenerate weights
+        $contentBased = mt_rand(10, 90) / 100;
+        $collaborative = mt_rand(10, 90) / 100;
+        $collaborativeLikes = mt_rand(10, 90) / 100;
+        $demographic = mt_rand(10, 90) / 100;
+
+        // dd($contentBased, $collaborative, $collaborativeLikes, $demographic);
+
+        $weight = Weight::where('user_id', Auth::id())->firstOrFail();
+        $weight->update([
+            'content_based' => $contentBased,
+            'collaborative' => $collaborative,
+            'collaborative_likes' => $collaborativeLikes,
+            'demographic' => $demographic,
+        ]);
+
+        // Redirect back with success message
+        return redirect()->back()->with('success', 'Recommendations have been regenerated.');
+    }
+
     public function view10($filter)
     {
         $user = Auth::user();

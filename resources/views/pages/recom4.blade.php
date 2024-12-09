@@ -3,6 +3,25 @@
 @include('../layouts/homeHeader')
 <!-- End of Header -->
 
+<!-- Modal for User Prompt -->
+<div class="modal fade" id="recommendationPrompt" tabindex="-1" aria-labelledby="recommendationPromptLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="recommendationPromptLabel">Recommendation Feedback</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Do you like this recommendation?</p>
+        <div class="d-flex justify-content-between">
+          <a href="#" id="yesLink" class="btn btn-success w-45">Yes</a>
+          <a href="{{ route('recommendations.regenerate') }}" class="btn btn-danger w-45">No</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Movies Section -->
 <section id="movies" class="p-3 pb-5">
   <style>
@@ -149,9 +168,9 @@ li{
         <hr class="line">
       </div>
     </div>
-
     <!-- Recommendation Details Link -->
     <div class="recommendation-details me-2">
+      <button id="feedbackButton" class="nav-link button">Give Feedback</button>
       <a href="{{route('weights.index')}}" class="nav-link button">Update Weights</a>
       <a href="{{route('user.recommendationDetails')}}" class="nav-link button">Recommendation Details</a>
     </div>
@@ -369,4 +388,19 @@ li{
 
   // Initialize with all movies displayed
   document.getElementById('recommendedMovieCount').dispatchEvent(new Event('input'));
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Initialize Bootstrap Modal
+    const modal = new bootstrap.Modal(document.getElementById('recommendationPrompt'));
+
+    // Show modal when feedback button is clicked
+    document.getElementById('feedbackButton').addEventListener('click', function () {
+      modal.show();
+    });
+        // Close modal when "Yes" is clicked
+        document.getElementById('yesLink').addEventListener('click', function (event) {
+      event.preventDefault(); // Prevent default anchor behavior
+      modal.hide(); // Close the modal
+    });
+  });
 </script>
