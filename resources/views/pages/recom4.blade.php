@@ -182,6 +182,33 @@ li{
           <!-- Watched Movies Table (Left) -->
           <div class="table-responsive sticky-watched ">
             <h5 class="text-center">Watched Movies</h5>
+            <div class="row mt-3 justify-content-center">
+             
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div class=" movie-count-wrap mb-0 ">
+                <label for="recommendedMovieCount" class="movie-count-label mr-2 mb-0">Show:</label>
+                <input type="number" id="recommendedMovieCount1" class="form-control movie-count-input" value="all" min="1" max="30">
+              </div>
+              {{-- <div class=" ">
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle filter-type" href="#" id="filterDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Filter By Type
+                  </a>
+                  <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                    <li><a class="dropdown-item" href="http://127.0.0.1:8000/user/recommendationHyb">All</a></li>
+                    <li><a class="dropdown-item" href="http://127.0.0.1:8000/recommendations/bothCollaborativeAndContent">Both Collaborative &amp; Content</a></li>
+                    <li><a class="dropdown-item" href="http://127.0.0.1:8000/recommendations/content_based">Content Based </a></li>
+                    <li><a class="dropdown-item" href="http://127.0.0.1:8000/recommendations/collaborative">Collaborative Based On Ratings</a></li>
+                    <li><a class="dropdown-item" href="http://127.0.0.1:8000/recommendations/collaborative_likes">Collaborative Based On Likes</a></li>
+                    <li><a class="dropdown-item" href="http://127.0.0.1:8000/recommendations/bothCollaborativeAndLikes">Collaborative Based On Both Ratings &amp; Likes</a></li>
+                    <li><a class="dropdown-item" href="http://127.0.0.1:8000/recommendations/demographic">Demographic Recommendation</a></li>
+                    <li><a class="dropdown-item" href="http://127.0.0.1:8000/recommendations/dislike_recommend">Dislike</a></li>
+                  </ul>
+                </li>                
+              </div> --}}
+            </div>
+
             <table class="table table-bordered table-striped" width="100%" cellspacing="0">
               <thead class="thead-dark">
                 <tr>
@@ -374,6 +401,19 @@ li{
   }
 
   // Event listener for movie count input
+  document.getElementById('recommendedMovieCount').addEventListener('input', function() {
+    let selectedCount = this.value;
+
+    if (selectedCount === '' || selectedCount === 'all') {
+      selectedCount = 'all';
+    } else {
+      selectedCount = parseInt(selectedCount);
+    }
+
+    displayRecommendedMovies(selectedCount);
+  });
+
+    // Event listener for movie count input
   document.getElementById('recommendedMovieCount').addEventListener('input', function() {
     let selectedCount = this.value;
 
