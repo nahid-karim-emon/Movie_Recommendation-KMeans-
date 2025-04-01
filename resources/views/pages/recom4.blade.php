@@ -259,7 +259,7 @@ li{
               @elseif($filter == 'bothCollaborativeAndLikes')
                 Collaborative Based On Both Ratings & Likes
               @elseif($filter == 'bothCollaborativeAndContent')
-                Based On Both Collaborative & Content
+                Based On HRecSys++
               @elseif($filter == 'demographic')
                 Based On Demographic Information
               @elseif($filter == 'dislike_recommend')
@@ -289,7 +289,7 @@ li{
                   </a>
                   <ul class="dropdown-menu" aria-labelledby="filterDropdown">
                     <li><a class="dropdown-item" href="{{ route('user.recommendation.view9')  }}">All</a></li>
-                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','bothCollaborativeAndContent')}}">Both Collaborative & Content</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.recommendations.show','bothCollaborativeAndContent')}}">HRecSys++</a></li>
                     <li><a class="dropdown-item" href="{{ route('user.recommendations.show','content_based')}}">Content Based </a></li>
                     <li><a class="dropdown-item" href="{{ route('user.recommendations.show','collaborative')}}">Collaborative Based On Ratings</a></li>
                     <li><a class="dropdown-item" href="{{ route('user.recommendations.show','collaborative_likes')}}">Collaborative Based On Likes</a></li>
